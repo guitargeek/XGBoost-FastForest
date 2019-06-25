@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(ExampleTest) {
     std::vector<float> input{0.0, 0.2, 0.4, 0.6, 0.8};
 
     float score = fastForest(input.data());
-    float logistcScore = 1./(1. + std::exp(-score));
+    float logistcScore = 1. / (1. + std::exp(-score));
 }
 
 BOOST_AUTO_TEST_CASE(BasicTest) {

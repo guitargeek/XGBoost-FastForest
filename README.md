@@ -8,7 +8,7 @@ In science, it is very common to protoype algorithms with Python and then put th
 Transitioning models from Python to C++ should be as easy as possible to make sure new ideas can be tried out rapidly.
 The __FastForest__ library helps you to get your xgboost model into a C++ production environment as quickly as possible.
 
-The goal of this library is to be:
+The mission of this library is to be:
 * __Easy__: deploying your xgboost model should be as painless as it can be
 * __Fast__: thanks to efficient data structures for storing the trees, this library goes easy on your CPU and memory
 * __Safe__: the FastForest objects are immutable, and therefore they are an excellent choice in multithreading
@@ -68,10 +68,27 @@ Some things to keep in mind:
 
 * You need to pass the names of the features that you will later use for the prediction to the FastForest constructor. This is necessary because the features are not ordered in the text file, hence you need to define an
   order yourself.
-* Alternatively, can let the FastForest automatically determine an order by just passing an empty vector of strings. You will see the vector is later filled with automatically determined feature names afterwards.
+* Alternatively, can let the FastForest automatically determine an order by just passing an empty vector of strings. You will see the vector is filled with automatically determined feature names afterwards.
   * The original order of the features used in the training can't be recovered.
 * The FastForest does not apply the [logistic transformation](https://en.wikipedia.org/wiki/Logistic_function).
   This is intentional, so you will not have any precision loss when you need the untransformed output. Thereforey ou need to apply
   the logistic transformation manually if you trained with `objective='binary:logistic'` and want to reproduce the results of `predict_proba()`, like in the code snippet above.
   * If you train with the `objective='binary:logitraw'`
     parameter, the output you'll get from `predict_proba()` will be without the logistic transformation, just like from the FastForest.
+
+### Performance Benchmarks
+
+So far, the FastForest has only been bencharked against the inference engine in the xgboost python library (undelying
+C).
+
+| Compiler                                                   | Relative Speedup |
+| :------                                                    | ---------------- |
+| Inference in __Python__ with __xgboost__                   | 1.0              |
+| __FastForest__ compiled with __g++ (GCC) 9.1.0__ and `-03` | 1.9              |
+| __FastForest__ compiled with __g++ (GCC) 9.1.0__ and `-02` | 3.6              |
+
+The benchmak can be reproduced with the files found in the [benchmark directory](benchmark). The python scripts have to be
+run first as they also train and save the models.
+
+The tests were performed on a Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz. Yes, the FastForest was inteed faster with the `-O3`
+option compared to `-O2`, which [can happen](https://stackoverflow.com/questions/28875325/gcc-optimization-flag-o3-makes-code-slower-than-o2).
