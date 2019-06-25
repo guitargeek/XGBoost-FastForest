@@ -1,4 +1,4 @@
-# FastForest
+# XGBoost-FastForest
 
 Minimal library code to deploy [XGBoost](https://xgboost.readthedocs.io/en/latest/) models in C++.
 
