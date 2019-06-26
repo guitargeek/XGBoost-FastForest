@@ -81,14 +81,12 @@ Some things to keep in mind:
 So far, the FastForest has only been bencharked against the inference engine in the xgboost python library (undelying
 C).
 
-| Compiler                                                   | Relative Speedup |
-| :------                                                    | ---------------- |
-| Inference in __Python__ with __xgboost__                   | 1.0              |
-| __FastForest__ compiled with __g++ (GCC) 9.1.0__ and `-03` | 1.9              |
-| __FastForest__ compiled with __g++ (GCC) 9.1.0__ and `-02` | 3.6              |
+| Engine                           | Benchmark time   |
+| :------                          | ---------------: |
+| __xgboost__ in __Python__        | 2.66 s           |
+| __FastForest__ (g++ (GCC) 9.1.0) | 0.78 s           |
 
 The benchmak can be reproduced with the files found in the [benchmark directory](benchmark). The python scripts have to be
 run first as they also train and save the models.
 
-The tests were performed on a Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz. Yes, the FastForest was inteed faster with the `-O3`
-option compared to `-O2`, which [can happen](https://stackoverflow.com/questions/28875325/gcc-optimization-flag-o3-makes-code-slower-than-o2).
+The tests were performed on a Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz.

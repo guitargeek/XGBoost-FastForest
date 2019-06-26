@@ -63,22 +63,4 @@ class FastForest {
     std::vector<FastTree> trees_;
 };
 
-inline double FastTree::operator()(const float* array) const {
-    int index = 0;
-    do {
-        auto r = rightIndices_[index];
-        auto l = leftIndices_[index];
-        index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
-    } while (index > 0);
-    return responses_[-index];
-}
-
-inline double FastForest::operator()(const float* array) const {
-    double response = 0;
-    for (auto const& tree : trees_) {
-        response += tree(array);
-    }
-    return response;
-}
-
 #endif

@@ -200,3 +200,21 @@ FastForest::FastForest(std::string const& txtpath, std::vector<std::string>& fea
         detail::correctIndices(tree->leftIndices_, nodeIndices, leafIndices);
     }
 }
+
+double FastTree::operator()(const float* array) const {
+    int index = 0;
+    do {
+        auto r = rightIndices_[index];
+        auto l = leftIndices_[index];
+        index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
+    } while (index > 0);
+    return responses_[-index];
+}
+
+double FastForest::operator()(const float* array) const {
+    double response = 0;
+    for (auto const& tree : trees_) {
+        response += tree(array);
+    }
+    return response;
+}
