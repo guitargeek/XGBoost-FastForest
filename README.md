@@ -2,7 +2,7 @@
 
 Minimal library code to deploy [XGBoost](https://xgboost.readthedocs.io/en/latest/) models in C++.
 
-[![Build Status](https://travis-ci.com/guitargeek/FastForest.svg?token=vushp91kRZtCffRpLxPx&branch=master)](https://travis-ci.com/guitargeek/XGBoost-FastForest)
+[![Build Status](https://travis-ci.com/guitargeek/XGBoost-FastForest.svg?branch=master)](https://travis-ci.com/guitargeek/XGBoost-FastForest)
 
 In science, it is very common to protoype algorithms with Python and then put them in production with fast C++ code.
 Transitioning models from Python to C++ should be as easy as possible to make sure new ideas can be tried out rapidly.
