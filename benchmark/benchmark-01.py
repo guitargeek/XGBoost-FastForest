@@ -3,12 +3,17 @@ from sklearn.datasets import make_classification
 import numpy as np
 import time
 
+import xgboost2tmva
+
 X, y = make_classification(n_samples=10000, n_features=5, random_state=42, n_classes=2, weights=[0.5])
 
 model = XGBClassifier(n_estimators=1000).fit(X, y)
 
 model._Booster.dump_model("model.txt")
 model._Booster.save_model("model.bin")
+
+input_variables = [("f"+str(i), "F") for i in range(5)]
+xgboost2tmva.convert_model(model._Booster.get_dump(), input_variables, "model.xml")
 
 X_test = np.random.uniform(-5, 5, size=(100000, 5))
 

@@ -78,13 +78,15 @@ Some things to keep in mind:
 
 ### Performance Benchmarks
 
-So far, the FastForest has only been bencharked against the inference engine in the xgboost python library (undelying
-C).
+So far, FastForest has been bencharked against the inference engine in the xgboost python library (undelying
+C) and the [TMVA framework](https://root.cern.ch/tmva). For every engine, the same tree ensemble of 1000 trees is used,
+and inference is done on a single thread.
 
 | Engine                           | Benchmark time   |
 | :------                          | ---------------: |
-| __xgboost__ in __Python__        | 2.66 s           |
 | __FastForest__ (g++ (GCC) 9.1.0) | 0.78 s           |
+| __xgboost__ 0.82 in __Python__ 3.7.3        | 2.6 s           |
+| ROOT 6.16/00 __TMVA__                    | 3.8 s           |
 
 The benchmak can be reproduced with the files found in the [benchmark directory](benchmark). The python scripts have to be
 run first as they also train and save the models.
