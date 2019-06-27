@@ -33,6 +33,7 @@ SOFTWARE.
 class FastForest {
   public:
     FastForest(std::string const& txtpath, std::vector<std::string>& features);
+    FastForest(std::string const& txtpath);
     double operator()(const float* array) const;
 
     auto const& cutIndices() const { return cutIndices_; }
@@ -40,6 +41,8 @@ class FastForest {
     auto const& leftIndices() const { return leftIndices_; }
     auto const& rightIndices() const { return rightIndices_; }
     auto const& responses() const { return responses_; }
+
+    void save(std::string const& filename) const;
 
   private:
     std::vector<int> rootIndices_;

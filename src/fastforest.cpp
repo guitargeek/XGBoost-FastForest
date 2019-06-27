@@ -215,3 +215,49 @@ double FastForest::operator()(const float* array) const {
     }
     return response;
 }
+
+FastForest::FastForest(std::string const& txtpath) {
+    std::ifstream is(txtpath, std::ios::binary);
+
+    int nRootNodes = rootIndices_.size();
+    int nNodes = cutValues_.size();
+    int nLeaves = responses_.size();
+
+    is.read((char*)&nRootNodes, sizeof(int));
+    is.read((char*)&nNodes, sizeof(int));
+    is.read((char*)&nLeaves, sizeof(int));
+
+    rootIndices_.resize(nRootNodes);
+    cutIndices_.resize(nNodes);
+    cutValues_.resize(nNodes);
+    leftIndices_.resize(nNodes);
+    rightIndices_.resize(nNodes);
+    responses_.resize(nLeaves);
+
+    is.read((char*)rootIndices_.data(), nRootNodes * sizeof(int));
+    is.read((char*)cutIndices_.data(), nNodes * sizeof(unsigned char));
+    is.read((char*)cutValues_.data(), nNodes * sizeof(float));
+    is.read((char*)leftIndices_.data(), nNodes * sizeof(int));
+    is.read((char*)rightIndices_.data(), nNodes * sizeof(int));
+    is.read((char*)responses_.data(), nLeaves * sizeof(float));
+}
+
+void FastForest::save(std::string const& filename) const {
+    std::ofstream os(filename, std::ios::binary);
+
+    int nRootNodes = rootIndices_.size();
+    int nNodes = cutValues_.size();
+    int nLeaves = responses_.size();
+
+    os.write((const char*)&nRootNodes, sizeof(int));
+    os.write((const char*)&nNodes, sizeof(int));
+    os.write((const char*)&nLeaves, sizeof(int));
+
+    os.write((const char*)rootIndices_.data(), nRootNodes * sizeof(int));
+    os.write((const char*)cutIndices_.data(), nNodes * sizeof(unsigned char));
+    os.write((const char*)cutValues_.data(), nNodes * sizeof(float));
+    os.write((const char*)leftIndices_.data(), nNodes * sizeof(int));
+    os.write((const char*)rightIndices_.data(), nNodes * sizeof(int));
+    os.write((const char*)responses_.data(), nLeaves * sizeof(float));
+    os.close();
+}
