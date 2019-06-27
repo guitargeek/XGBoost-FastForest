@@ -84,7 +84,7 @@ and inference is done on a single thread.
 
 | Engine                           | Benchmark time   |
 | :------                          | ---------------: |
-| __FastForest__ (g++ (GCC) 9.1.0) | 0.78 s           |
+| __FastForest__ (g++ (GCC) 9.1.0) | 0.58 s           |
 | __xgboost__ 0.82 in __Python__ 3.7.3        | 2.6 s           |
 | ROOT 6.16/00 __TMVA__                    | 3.8 s           |
 

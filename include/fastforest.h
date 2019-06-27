@@ -30,10 +30,9 @@ SOFTWARE.
 #include <vector>
 #include <string>
 
-class FastForest;
-
-class FastTree {
+class FastForest {
   public:
+    FastForest(std::string const& txtpath, std::vector<std::string>& features);
     double operator()(const float* array) const;
 
     auto const& cutIndices() const { return cutIndices_; }
@@ -43,24 +42,12 @@ class FastTree {
     auto const& responses() const { return responses_; }
 
   private:
+    std::vector<int> rootIndices_;
     std::vector<unsigned char> cutIndices_;
     std::vector<float> cutValues_;
     std::vector<int> leftIndices_;
     std::vector<int> rightIndices_;
     std::vector<float> responses_;
-
-    friend class FastForest;
-};
-
-class FastForest {
-  public:
-    FastForest(std::string const& txtpath, std::vector<std::string>& features);
-    double operator()(const float* array) const;
-
-    auto const& trees() const { return trees_; }
-
-  private:
-    std::vector<FastTree> trees_;
 };
 
 #endif

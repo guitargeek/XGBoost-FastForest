@@ -88,14 +88,15 @@ namespace {
     }  // namespace util
 
     namespace detail {
-        void correctIndices(std::vector<int>& txtIndices,
+        void correctIndices(std::vector<int>::iterator begin,
+                            std::vector<int>::iterator end,
                             std::unordered_map<int, int> const& nodeIndices,
                             std::unordered_map<int, int> const& leafIndices) {
-            for (auto& i : txtIndices) {
-                if (nodeIndices.count(i)) {
-                    i = nodeIndices.at(i);
-                } else if (leafIndices.count(i)) {
-                    i = -leafIndices.at(i);
+            for (auto it = begin; it != end; ++it) {
+                if (nodeIndices.count(*it)) {
+                    *it = nodeIndices.at(*it);
+                } else if (leafIndices.count(*it)) {
+                    *it = -leafIndices.at(*it);
                 } else {
                     throw std::runtime_error("something is wrong in the node structure");
                 }
@@ -107,8 +108,6 @@ namespace {
 
 FastForest::FastForest(std::string const& txtpath, std::vector<std::string>& features) {
     const std::string info = "constructing FastForest from " + txtpath + ": ";
-
-    FastTree* tree = nullptr;
 
     std::ifstream file(txtpath);
 
@@ -129,20 +128,25 @@ FastForest::FastForest(std::string const& txtpath, std::vector<std::string>& fea
     std::unordered_map<int, int> nodeIndices;
     std::unordered_map<int, int> leafIndices;
 
+    int nPreviousNodes = 0;
+    int nPreviousLeaves = 0;
+
     while (std::getline(file, line)) {
         auto foundBegin = line.find("[");
         auto foundEnd = line.find("]");
         if (foundBegin != std::string::npos) {
             auto subline = line.substr(foundBegin + 1, foundEnd - foundBegin - 1);
             if (util::isInteger(subline)) {
-                if (tree) {
-                    detail::correctIndices(tree->rightIndices_, nodeIndices, leafIndices);
-                    detail::correctIndices(tree->leftIndices_, nodeIndices, leafIndices);
-                }
-                trees_.emplace_back();
-                tree = &trees_.back();
+                detail::correctIndices(
+                    rightIndices_.begin() + nPreviousNodes, rightIndices_.end(), nodeIndices, leafIndices);
+                detail::correctIndices(
+                    leftIndices_.begin() + nPreviousNodes, leftIndices_.end(), nodeIndices, leafIndices);
                 nodeIndices.clear();
                 leafIndices.clear();
+                nPreviousNodes = cutValues_.size();
+                nPreviousLeaves = responses_.size();
+                //if(nPreviousNodes) break;
+                rootIndices_.push_back(nPreviousNodes);
             } else {
                 std::stringstream ss(line);
                 int index;
@@ -175,11 +179,11 @@ FastForest::FastForest(std::string const& txtpath, std::vector<std::string>& fea
                     throw std::runtime_error(info + "problem while parsing the text dump");
                 }
 
-                tree->cutValues_.push_back(cutValue);
-                tree->cutIndices_.push_back(varIndices[varName]);
-                tree->leftIndices_.push_back(yes);
-                tree->rightIndices_.push_back(no);
-                nodeIndices[index] = nodeIndices.size();
+                cutValues_.push_back(cutValue);
+                cutIndices_.push_back(varIndices[varName]);
+                leftIndices_.push_back(yes);
+                rightIndices_.push_back(no);
+                nodeIndices[index] = nodeIndices.size() + nPreviousNodes;
             }
 
         } else {
@@ -190,31 +194,24 @@ FastForest::FastForest(std::string const& txtpath, std::vector<std::string>& fea
                 ss >> index;
                 line = ss.str();
 
-                tree->responses_.push_back(output.value);
-                leafIndices[index] = leafIndices.size();
+                responses_.push_back(output.value);
+                leafIndices[index] = leafIndices.size() + nPreviousLeaves;
             }
         }
     }
-    if (tree) {
-        detail::correctIndices(tree->rightIndices_, nodeIndices, leafIndices);
-        detail::correctIndices(tree->leftIndices_, nodeIndices, leafIndices);
-    }
-}
-
-double FastTree::operator()(const float* array) const {
-    int index = 0;
-    do {
-        auto r = rightIndices_[index];
-        auto l = leftIndices_[index];
-        index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
-    } while (index > 0);
-    return responses_[-index];
+    detail::correctIndices(rightIndices_.begin() + nPreviousNodes, rightIndices_.end(), nodeIndices, leafIndices);
+    detail::correctIndices(leftIndices_.begin() + nPreviousNodes, leftIndices_.end(), nodeIndices, leafIndices);
 }
 
 double FastForest::operator()(const float* array) const {
-    double response = 0;
-    for (auto const& tree : trees_) {
-        response += tree(array);
+    double response = 0.;
+    for (int index : rootIndices_) {
+        do {
+            auto r = rightIndices_[index];
+            auto l = leftIndices_[index];
+            index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
+        } while (index > 0);
+        response += responses_[-index];
     }
     return response;
 }
