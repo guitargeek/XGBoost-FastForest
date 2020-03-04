@@ -58,7 +58,6 @@ namespace {
 
         template <class NumericType>
         inline auto numericAfterSubstr(std::string const& str, std::string const& substr) {
-            NumericType x = 0;
             std::string rest;
             NumericAfterSubstrOutput<NumericType> output;
             output.rest = str;
