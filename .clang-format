@@ -2,7 +2,6 @@
 Language:        Cpp
 BasedOnStyle:  Google
 ColumnLimit:     120
-#didn't we want to change this?
 NamespaceIndentation: All
 SortIncludes:    false
 IndentWidth:     4

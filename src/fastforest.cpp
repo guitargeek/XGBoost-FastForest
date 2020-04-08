@@ -33,6 +33,7 @@ SOFTWARE.
 #include <sstream>
 #include <unordered_map>
 #include <stdexcept>
+#include <experimental/filesystem>
 
 namespace {
 
@@ -108,6 +109,10 @@ namespace {
 FastForest::FastForest(std::string const& txtpath, std::vector<std::string>& features) {
     const std::string info = "constructing FastForest from " + txtpath + ": ";
 
+    if (!std::experimental::filesystem::exists(txtpath)) {
+        throw std::runtime_error(info + "file does not exists");
+    }
+
     std::ifstream file(txtpath);
 
     int nVariables = 0;
@@ -144,7 +149,6 @@ FastForest::FastForest(std::string const& txtpath, std::vector<std::string>& fea
                 leafIndices.clear();
                 nPreviousNodes = cutValues_.size();
                 nPreviousLeaves = responses_.size();
-                //if(nPreviousNodes) break;
                 rootIndices_.push_back(nPreviousNodes);
             } else {
                 std::stringstream ss(line);

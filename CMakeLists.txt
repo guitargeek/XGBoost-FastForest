@@ -15,6 +15,8 @@ enable_testing ()
 add_test (NAME fastforestTest COMMAND Test WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
 add_library (fastforest SHARED src/fastforest.cpp)
+target_link_libraries(fastforest stdc++fs)
+
 set_target_properties(fastforest PROPERTIES VERSION ${PROJECT_VERSION})
 
 set_target_properties(fastforest PROPERTIES SOVERSION 1)
