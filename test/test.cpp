@@ -37,9 +37,9 @@ BOOST_AUTO_TEST_CASE(BasicTest) {
         }
         score = fastForest(input.data());
         filePreds >> ref;
-    }
 
-    BOOST_CHECK_CLOSE(score, ref, tolerance);
+        BOOST_CHECK_CLOSE(score, ref, tolerance);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(SerializationTest) {
@@ -64,9 +64,9 @@ BOOST_AUTO_TEST_CASE(SerializationTest) {
         }
         score = fastForest(input.data());
         filePreds >> ref;
-    }
 
-    BOOST_CHECK_CLOSE(score, ref, tolerance);
+        BOOST_CHECK_CLOSE(score, ref, tolerance);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(DiscreteTest) {
@@ -87,7 +87,33 @@ BOOST_AUTO_TEST_CASE(DiscreteTest) {
         }
         score = fastForest(input.data());
         filePreds >> ref;
+
+        BOOST_CHECK_CLOSE(score, ref, tolerance);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ManyfeaturesTest) {
+    std::vector<std::string> features{};
+    for (int i = 0; i < 310; ++i) {
+        features.push_back(std::string("f") + std::to_string(i));
     }
 
-    BOOST_CHECK_CLOSE(score, ref, tolerance);
+    FastForest fastForest("manyfeatures/model.txt", features);
+
+    std::ifstream fileX("manyfeatures/X.csv");
+    std::ifstream filePreds("manyfeatures/preds.csv");
+
+    std::vector<FastForest::FeatureType> input(features.size());
+    FastForest::FeatureType score;
+    FastForest::FeatureType ref;
+
+    for (int i = 0; i < 100; ++i) {
+        for (auto& x : input) {
+            fileX >> x;
+        }
+        score = fastForest(input.data());
+        filePreds >> ref;
+
+        BOOST_CHECK_CLOSE(score, ref, tolerance);
+    }
 }
