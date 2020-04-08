@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(DiscreteTest) {
 
 BOOST_AUTO_TEST_CASE(ManyfeaturesTest) {
     std::vector<std::string> features{};
-    for (int i = 0; i < 310; ++i) {
+    for (int i = 0; i < 311; ++i) {
         features.push_back(std::string("f") + std::to_string(i));
     }
 

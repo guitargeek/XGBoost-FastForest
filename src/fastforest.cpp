@@ -234,7 +234,7 @@ FastForest::FastForest(std::string const& txtpath) {
     responses_.resize(nLeaves);
 
     is.read((char*)rootIndices_.data(), nRootNodes * sizeof(int));
-    is.read((char*)cutIndices_.data(), nNodes * sizeof(unsigned char));
+    is.read((char*)cutIndices_.data(), nNodes * sizeof(CutIndexType));
     is.read((char*)cutValues_.data(), nNodes * sizeof(FeatureType));
     is.read((char*)leftIndices_.data(), nNodes * sizeof(int));
     is.read((char*)rightIndices_.data(), nNodes * sizeof(int));
@@ -253,7 +253,7 @@ void FastForest::save(std::string const& filename) const {
     os.write((const char*)&nLeaves, sizeof(int));
 
     os.write((const char*)rootIndices_.data(), nRootNodes * sizeof(int));
-    os.write((const char*)cutIndices_.data(), nNodes * sizeof(unsigned char));
+    os.write((const char*)cutIndices_.data(), nNodes * sizeof(CutIndexType));
     os.write((const char*)cutValues_.data(), nNodes * sizeof(FeatureType));
     os.write((const char*)leftIndices_.data(), nNodes * sizeof(int));
     os.write((const char*)rightIndices_.data(), nNodes * sizeof(int));

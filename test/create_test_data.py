@@ -40,7 +40,7 @@ create_test_data(X_discrete, y, "discrete")
 X_dump = pd.read_csv("discrete/X.csv", header=None, sep=" ") + 1
 X_dump.to_csv("discrete/X.csv", **csv_args)
 
-df = pd.read_csv("manyfeatures.csv.gz", header=None)
+df = pd.read_csv("manyfeatures.csv.gz", header=None, compression="gzip")
 
 _, y = make_classification(n_samples=len(df), random_state=43, n_classes=2, weights=[0.5])
 

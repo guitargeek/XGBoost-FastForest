@@ -38,6 +38,9 @@ class FastForest {
     using TreeResponseType = float;
     // The floating point number type that is used to sum the individual tree responses
     using TreeEnsembleResponseType = float;
+    // This integer type stores the indices of the feature employed in each cut.
+    // Set to `unsigned char` for most compact fastforest ofjects if you have less than 256 features.
+    using CutIndexType = unsigned int;
 
     FastForest(std::string const& txtpath, std::vector<std::string>& features);
     FastForest(std::string const& txtpath);
@@ -53,7 +56,7 @@ class FastForest {
 
   private:
     std::vector<int> rootIndices_;
-    std::vector<unsigned char> cutIndices_;
+    std::vector<CutIndexType> cutIndices_;
     std::vector<FeatureType> cutValues_;
     std::vector<int> leftIndices_;
     std::vector<int> rightIndices_;
