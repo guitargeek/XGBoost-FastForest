@@ -208,7 +208,7 @@ FastForest::TreeEnsembleResponseType FastForest::operator()(const FeatureType* a
         do {
             auto r = rightIndices_[index];
             auto l = leftIndices_[index];
-            index = array[cutIndices_[index]] >= cutValues_[index] ? r : l;
+            index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
         } while (index > 0);
         response += responses_[-index];
     }
