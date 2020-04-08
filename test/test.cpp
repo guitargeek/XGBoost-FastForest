@@ -6,28 +6,30 @@
 #include <fstream>
 #include <cmath>
 
+constexpr FastForest::FeatureType tolerance = 1e-4;
+
 BOOST_AUTO_TEST_CASE(ExampleTest) {
     std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};
 
-    FastForest fastForest("model.txt", features);
+    FastForest fastForest("continuous/model.txt", features);
 
-    std::vector<float> input{0.0, 0.2, 0.4, 0.6, 0.8};
+    std::vector<FastForest::FeatureType> input{0.0, 0.2, 0.4, 0.6, 0.8};
 
-    float score = fastForest(input.data());
-    float logistcScore = 1. / (1. + std::exp(-score));
+    FastForest::FeatureType score = fastForest(input.data());
+    FastForest::FeatureType logistcScore = 1. / (1. + std::exp(-score));
 }
 
 BOOST_AUTO_TEST_CASE(BasicTest) {
     std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};
 
-    FastForest fastForest("model.txt", features);
+    FastForest fastForest("continuous/model.txt", features);
 
-    std::ifstream fileX("X.csv");
-    std::ifstream filePreds("preds.csv");
+    std::ifstream fileX("continuous/X.csv");
+    std::ifstream filePreds("continuous/preds.csv");
 
-    std::vector<float> input(5);
-    float score;
-    float ref;
+    std::vector<FastForest::FeatureType> input(5);
+    FastForest::FeatureType score;
+    FastForest::FeatureType ref;
 
     for (int i = 0; i < 100; ++i) {
         for (auto& x : input) {
@@ -37,24 +39,24 @@ BOOST_AUTO_TEST_CASE(BasicTest) {
         filePreds >> ref;
     }
 
-    BOOST_CHECK_CLOSE(score, ref, 0.001);
+    BOOST_CHECK_CLOSE(score, ref, tolerance);
 }
 
 BOOST_AUTO_TEST_CASE(SerializationTest) {
     {
         std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};
-        FastForest fastForest("model.txt", features);
-        fastForest.save("forest.bin");
+        FastForest fastForest("continuous/model.txt", features);
+        fastForest.save("continuous/forest.bin");
     }
 
-    FastForest fastForest("forest.bin");
+    FastForest fastForest("continuous/forest.bin");
 
-    std::ifstream fileX("X.csv");
-    std::ifstream filePreds("preds.csv");
+    std::ifstream fileX("continuous/X.csv");
+    std::ifstream filePreds("continuous/preds.csv");
 
-    std::vector<float> input(5);
-    float score;
-    float ref;
+    std::vector<FastForest::FeatureType> input(5);
+    FastForest::FeatureType score;
+    FastForest::FeatureType ref;
 
     for (int i = 0; i < 100; ++i) {
         for (auto& x : input) {
@@ -64,5 +66,28 @@ BOOST_AUTO_TEST_CASE(SerializationTest) {
         filePreds >> ref;
     }
 
-    BOOST_CHECK_CLOSE(score, ref, 0.001);
+    BOOST_CHECK_CLOSE(score, ref, tolerance);
+}
+
+BOOST_AUTO_TEST_CASE(DiscreteTest) {
+    std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};
+
+    FastForest fastForest("discrete/model.txt", features);
+
+    std::ifstream fileX("discrete/X.csv");
+    std::ifstream filePreds("discrete/preds.csv");
+
+    std::vector<FastForest::FeatureType> input(5);
+    FastForest::FeatureType score;
+    FastForest::FeatureType ref;
+
+    for (int i = 0; i < 100; ++i) {
+        for (auto& x : input) {
+            fileX >> x;
+        }
+        score = fastForest(input.data());
+        filePreds >> ref;
+    }
+
+    BOOST_CHECK_CLOSE(score, ref, tolerance);
 }

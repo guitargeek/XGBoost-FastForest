@@ -4,12 +4,20 @@ addons:
   apt:
     packages:
       - libboost-all-dev
+      - python3-pip
+      - python3-setuptools
+      - python3-pandas
+      - python3-numpy
 
 compiler:
   - clang
 
+install:
+  - python3 -m pip install sklearn xgboost
+
 script: 
   - cd ${TRAVIS_BUILD_DIR}
+  - cd test && python3 create_test_data.py && cd ..
   - mkdir build
   - cd build
   - cmake ..
