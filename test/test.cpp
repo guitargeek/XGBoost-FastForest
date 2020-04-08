@@ -6,6 +6,7 @@
 #include <fstream>
 #include <cmath>
 
+using ReferenceType = double;
 constexpr FastForest::FeatureType tolerance = 1e-4;
 
 BOOST_AUTO_TEST_CASE(ExampleTest) {
@@ -29,7 +30,7 @@ BOOST_AUTO_TEST_CASE(BasicTest) {
 
     std::vector<FastForest::FeatureType> input(5);
     FastForest::FeatureType score;
-    FastForest::FeatureType ref;
+    ReferenceType ref;
 
     for (int i = 0; i < 100; ++i) {
         for (auto& x : input) {
@@ -56,7 +57,7 @@ BOOST_AUTO_TEST_CASE(SerializationTest) {
 
     std::vector<FastForest::FeatureType> input(5);
     FastForest::FeatureType score;
-    FastForest::FeatureType ref;
+    ReferenceType ref;
 
     for (int i = 0; i < 100; ++i) {
         for (auto& x : input) {
@@ -79,7 +80,7 @@ BOOST_AUTO_TEST_CASE(DiscreteTest) {
 
     std::vector<FastForest::FeatureType> input(5);
     FastForest::FeatureType score;
-    FastForest::FeatureType ref;
+    ReferenceType ref;
 
     for (int i = 0; i < 100; ++i) {
         for (auto& x : input) {
@@ -105,7 +106,7 @@ BOOST_AUTO_TEST_CASE(ManyfeaturesTest) {
 
     std::vector<FastForest::FeatureType> input(features.size());
     FastForest::FeatureType score;
-    FastForest::FeatureType ref;
+    ReferenceType ref;
 
     for (int i = 0; i < 100; ++i) {
         for (auto& x : input) {
