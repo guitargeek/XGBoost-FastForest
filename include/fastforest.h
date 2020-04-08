@@ -32,9 +32,16 @@ SOFTWARE.
 
 class FastForest {
   public:
+    // The floating point number type that will be used to accept features and store cut values
+    using FeatureType = float;
+    // Tue floating point number type that the individual trees return their responses in
+    using TreeResponseType = float;
+    // The floating point number type that is used to sum the individual tree responses
+    using TreeEnsembleResponseType = float;
+
     FastForest(std::string const& txtpath, std::vector<std::string>& features);
     FastForest(std::string const& txtpath);
-    double operator()(const float* array) const;
+    TreeEnsembleResponseType operator()(const FeatureType* array) const;
 
     auto const& cutIndices() const { return cutIndices_; }
     auto const& cutValues() const { return cutValues_; }
@@ -47,10 +54,10 @@ class FastForest {
   private:
     std::vector<int> rootIndices_;
     std::vector<unsigned char> cutIndices_;
-    std::vector<float> cutValues_;
+    std::vector<FeatureType> cutValues_;
     std::vector<int> leftIndices_;
     std::vector<int> rightIndices_;
-    std::vector<float> responses_;
+    std::vector<TreeResponseType> responses_;
 };
 
 #endif

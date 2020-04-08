@@ -154,7 +154,7 @@ FastForest::FastForest(std::string const& txtpath, std::vector<std::string>& fea
 
                 auto splitstring = util::split(subline, '<');
                 auto const& varName = splitstring[0];
-                float cutValue = stof(splitstring[1]);
+                FeatureType cutValue = std::stold(splitstring[1]);
                 if (!varIndices.count(varName)) {
                     if (fixFeatures) {
                         throw std::runtime_error(info + "feature " + varName + " not in list of features");
@@ -186,7 +186,7 @@ FastForest::FastForest(std::string const& txtpath, std::vector<std::string>& fea
             }
 
         } else {
-            auto output = util::numericAfterSubstr<float>(line, "leaf=");
+            auto output = util::numericAfterSubstr<TreeResponseType>(line, "leaf=");
             if (output.found) {
                 std::stringstream ss(line);
                 int index;
@@ -202,13 +202,13 @@ FastForest::FastForest(std::string const& txtpath, std::vector<std::string>& fea
     detail::correctIndices(leftIndices_.begin() + nPreviousNodes, leftIndices_.end(), nodeIndices, leafIndices);
 }
 
-double FastForest::operator()(const float* array) const {
-    double response = 0.;
+FastForest::TreeEnsembleResponseType FastForest::operator()(const FeatureType* array) const {
+    TreeEnsembleResponseType response = 0.;
     for (int index : rootIndices_) {
         do {
             auto r = rightIndices_[index];
             auto l = leftIndices_[index];
-            index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
+            index = array[cutIndices_[index]] >= cutValues_[index] ? r : l;
         } while (index > 0);
         response += responses_[-index];
     }
@@ -235,10 +235,10 @@ FastForest::FastForest(std::string const& txtpath) {
 
     is.read((char*)rootIndices_.data(), nRootNodes * sizeof(int));
     is.read((char*)cutIndices_.data(), nNodes * sizeof(unsigned char));
-    is.read((char*)cutValues_.data(), nNodes * sizeof(float));
+    is.read((char*)cutValues_.data(), nNodes * sizeof(FeatureType));
     is.read((char*)leftIndices_.data(), nNodes * sizeof(int));
     is.read((char*)rightIndices_.data(), nNodes * sizeof(int));
-    is.read((char*)responses_.data(), nLeaves * sizeof(float));
+    is.read((char*)responses_.data(), nLeaves * sizeof(TreeResponseType));
 }
 
 void FastForest::save(std::string const& filename) const {
@@ -254,9 +254,9 @@ void FastForest::save(std::string const& filename) const {
 
     os.write((const char*)rootIndices_.data(), nRootNodes * sizeof(int));
     os.write((const char*)cutIndices_.data(), nNodes * sizeof(unsigned char));
-    os.write((const char*)cutValues_.data(), nNodes * sizeof(float));
+    os.write((const char*)cutValues_.data(), nNodes * sizeof(FeatureType));
     os.write((const char*)leftIndices_.data(), nNodes * sizeof(int));
     os.write((const char*)rightIndices_.data(), nNodes * sizeof(int));
-    os.write((const char*)responses_.data(), nLeaves * sizeof(float));
+    os.write((const char*)responses_.data(), nLeaves * sizeof(TreeResponseType));
     os.close();
 }
