@@ -1,4 +1,6 @@
 // compile with g++ -o benchmark-01-tmva benchmark-01-tmva.cpp `root-config --cflags --glibs` -lTMVA
+//
+// optimization flag does not matter because the TMVA library is already compiled
 
 #include <cmath>
 #include <algorithm>

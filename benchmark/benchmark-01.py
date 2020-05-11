@@ -11,13 +11,13 @@ sys.setrecursionlimit(1000000)
 
 X, y = make_classification(n_samples=10000, n_features=5, random_state=42, n_classes=2, weights=[0.5])
 
-model = XGBClassifier(n_estimators=1000).fit(X, y)
+model = XGBClassifier(n_estimators=1000, objective="binary:logistic").fit(X, y)
 
 model._Booster.dump_model("model.txt")
 model._Booster.save_model("model.bin")
 
 # export to TMVA-style XML file
-input_variables = [("f"+str(i), "F") for i in range(5)]
+input_variables = [("f" + str(i), "F") for i in range(5)]
 xgboost2tmva.convert_model(model._Booster.get_dump(), input_variables, "model.xml")
 
 # export to hardcoded C

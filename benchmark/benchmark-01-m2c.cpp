@@ -1,4 +1,7 @@
 // compile with g++ -o benchmark-01-m2c benchmark-01-m2c.cpp
+//
+// as the model is compiled together with this test, please try out different optimization flags
+// and quote the best result for a fair comparison with fastforest
 
 #include "model.c"
 
@@ -13,7 +16,7 @@ int main() {
     const int n = 100000;
 
     std::vector<float> input(5 * n);
-    std::vector<double> scores(n);
+    std::vector<float> scores(n);
 
     std::generate(input.begin(), input.end(), std::rand);
     for (auto& x : input) {
@@ -21,7 +24,7 @@ int main() {
     }
 
     clock_t begin = clock();
-    double out;
+    float out;
     for (int i = 0; i < n; ++i) {
         score(input.data() + i * 5, &scores[i]);
     }

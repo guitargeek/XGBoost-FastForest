@@ -1,4 +1,6 @@
 // compile with g++ -o benchmark-01 benchmark-01.cpp -lfastforest
+//
+// optimization flag does not matter because fastforest is already compiled
 
 #include "fastforest.h"
 
