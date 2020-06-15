@@ -40,6 +40,6 @@ namespace fastforest {
 
     }  // namespace detail
 
-}  // namespace
+}  // namespace fastforest
 
 #endif

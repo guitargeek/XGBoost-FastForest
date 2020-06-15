@@ -56,6 +56,7 @@ namespace fastforest {
     };
 
     FastForest load_txt(std::string const& txtpath, std::vector<std::string>& features);
+    FastForest load_tmva_xml(std::string const& xmlpath, std::vector<std::string>& features);
     FastForest load_bin(std::string const& txtpath);
 
 }  // namespace fastforest
