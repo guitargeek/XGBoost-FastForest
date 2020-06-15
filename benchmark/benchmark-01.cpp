@@ -14,7 +14,7 @@
 int main() {
     std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};
 
-    FastForest fastForest("model.txt", features);
+    const auto fastForest = fastforest::load_txt("model.txt", features);
 
     const int n = 100000;
 

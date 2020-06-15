@@ -30,8 +30,8 @@ SOFTWARE.
 #include <vector>
 #include <string>
 
-class FastForest {
-  public:
+namespace fastforest {
+
     // The floating point number type that will be used to accept features and store cut values
     using FeatureType = float;
     // Tue floating point number type that the individual trees return their responses in
@@ -42,25 +42,22 @@ class FastForest {
     // Set to `unsigned char` for most compact fastforest ofjects if you have less than 256 features.
     using CutIndexType = unsigned int;
 
-    FastForest(std::string const& txtpath, std::vector<std::string>& features);
-    FastForest(std::string const& txtpath);
-    TreeEnsembleResponseType operator()(const FeatureType* array) const;
+    struct FastForest {
+        TreeEnsembleResponseType operator()(const FeatureType* array) const;
 
-    auto const& cutIndices() const { return cutIndices_; }
-    auto const& cutValues() const { return cutValues_; }
-    auto const& leftIndices() const { return leftIndices_; }
-    auto const& rightIndices() const { return rightIndices_; }
-    auto const& responses() const { return responses_; }
+        void write_bin(std::string const& filename) const;
 
-    void save(std::string const& filename) const;
+        std::vector<int> rootIndices_;
+        std::vector<CutIndexType> cutIndices_;
+        std::vector<FeatureType> cutValues_;
+        std::vector<int> leftIndices_;
+        std::vector<int> rightIndices_;
+        std::vector<TreeResponseType> responses_;
+    };
 
-  private:
-    std::vector<int> rootIndices_;
-    std::vector<CutIndexType> cutIndices_;
-    std::vector<FeatureType> cutValues_;
-    std::vector<int> leftIndices_;
-    std::vector<int> rightIndices_;
-    std::vector<TreeResponseType> responses_;
-};
+    FastForest load_txt(std::string const& txtpath, std::vector<std::string>& features);
+    FastForest load_bin(std::string const& txtpath);
+
+}  // namespace fastforest
 
 #endif

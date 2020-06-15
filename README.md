@@ -11,7 +11,7 @@ The __FastForest__ library helps you to get your xgboost model into a C++ produc
 The mission of this library is to be:
 * __Easy__: deploying your xgboost model should be as painless as it can be
 * __Fast__: thanks to efficient data structures for storing the trees, this library goes easy on your CPU and memory
-* __Safe__: the FastForest objects are immutable, and therefore they are an excellent choice in multithreading
+* __Safe__: the FastForest objects are not mutated when used, and therefore they are an excellent choice in multithreading
   environments
 * __Portable__: FastForest has no dependency other than the C++ standard library
 
@@ -56,7 +56,7 @@ In C++, you can now easily load the model into a `FastForest` and obtain predict
 int main() {
     std::vector<std::string> features{"f0",  "f1",  "f2",  "f3",  "f4"};
 
-    FastForest fastForest("model.txt", features);
+    const auto fastForest = fastforest::load_txt("model.txt", features);
 
     std::vector<float> input{0.0, 0.2, 0.4, 0.6, 0.8};
 
@@ -99,13 +99,13 @@ The tests were performed on a Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz.
 ### Serialization
 
 The FastForests can serialized to it's own binary format. The binary format exactly reflects the memory layout of the
-FastForest class, so saving and loading is as fast as it can be. The serialization to file is done with the `save`
+FastForest class, so saving and loading is as fast as it can be. The serialization to file is done with the `write_bin`
 method.
 ```C++
-fastForest.save("forest.bin");
+fastForest.write_bin("forest.bin");
 ```
 The serialized FastForest can be read back with it's constructor, this time the one that does not take a reference to a
 vector for the feature names.
 ```C++
-FastForest fastForest("forest.bin");
+const auto fastForest = fastforest::load_bin("forest.bin");
 ```
