@@ -14,7 +14,9 @@ add_subdirectory (test)
 enable_testing ()
 add_test (NAME fastforestTest COMMAND Test WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
-add_library (fastforest SHARED src/fastforest.cpp src/util.cpp)
+file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
+
+add_library (fastforest SHARED ${SOURCE_FILES})
 target_link_libraries(fastforest stdc++fs)
 
 set_target_properties(fastforest PROPERTIES VERSION ${PROJECT_VERSION})

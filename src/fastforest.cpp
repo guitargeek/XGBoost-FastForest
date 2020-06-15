@@ -25,11 +25,10 @@ SOFTWARE.
 */
 
 #include "fastforest.h"
+#include "common_details.h"
 
-#include <vector>
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <sstream>
 #include <unordered_map>
 #include <stdexcept>
@@ -88,23 +87,6 @@ namespace {
             return splittedStrings;
         }
     }  // namespace util
-
-    namespace detail {
-        void correctIndices(std::vector<int>::iterator begin,
-                            std::vector<int>::iterator end,
-                            std::unordered_map<int, int> const& nodeIndices,
-                            std::unordered_map<int, int> const& leafIndices) {
-            for (auto it = begin; it != end; ++it) {
-                if (nodeIndices.count(*it)) {
-                    *it = nodeIndices.at(*it);
-                } else if (leafIndices.count(*it)) {
-                    *it = -leafIndices.at(*it);
-                } else {
-                    throw std::runtime_error("something is wrong in the node structure");
-                }
-            }
-        }
-    }  // namespace detail
 
 }  // namespace
 
@@ -210,67 +192,4 @@ FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::str
     detail::correctIndices(ff.leftIndices_.begin() + nPreviousNodes, ff.leftIndices_.end(), nodeIndices, leafIndices);
 
     return ff;
-}
-
-TreeEnsembleResponseType fastforest::FastForest::operator()(const FeatureType* array) const {
-    TreeEnsembleResponseType response = 0.;
-    for (int index : rootIndices_) {
-        do {
-            auto r = rightIndices_[index];
-            auto l = leftIndices_[index];
-            index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
-        } while (index > 0);
-        response += responses_[-index];
-    }
-    return response;
-}
-
-FastForest fastforest::load_bin(std::string const& txtpath) {
-    FastForest ff;
-
-    std::ifstream is(txtpath, std::ios::binary);
-
-    int nRootNodes = ff.rootIndices_.size();
-    int nNodes = ff.cutValues_.size();
-    int nLeaves = ff.responses_.size();
-
-    is.read((char*)&nRootNodes, sizeof(int));
-    is.read((char*)&nNodes, sizeof(int));
-    is.read((char*)&nLeaves, sizeof(int));
-
-    ff.rootIndices_.resize(nRootNodes);
-    ff.cutIndices_.resize(nNodes);
-    ff.cutValues_.resize(nNodes);
-    ff.leftIndices_.resize(nNodes);
-    ff.rightIndices_.resize(nNodes);
-    ff.responses_.resize(nLeaves);
-
-    is.read((char*)ff.rootIndices_.data(), nRootNodes * sizeof(int));
-    is.read((char*)ff.cutIndices_.data(), nNodes * sizeof(CutIndexType));
-    is.read((char*)ff.cutValues_.data(), nNodes * sizeof(FeatureType));
-    is.read((char*)ff.leftIndices_.data(), nNodes * sizeof(int));
-    is.read((char*)ff.rightIndices_.data(), nNodes * sizeof(int));
-    is.read((char*)ff.responses_.data(), nLeaves * sizeof(TreeResponseType));
-
-    return ff;
-}
-
-void fastforest::FastForest::write_bin(std::string const& filename) const {
-    std::ofstream os(filename, std::ios::binary);
-
-    int nRootNodes = rootIndices_.size();
-    int nNodes = cutValues_.size();
-    int nLeaves = responses_.size();
-
-    os.write((const char*)&nRootNodes, sizeof(int));
-    os.write((const char*)&nNodes, sizeof(int));
-    os.write((const char*)&nLeaves, sizeof(int));
-
-    os.write((const char*)rootIndices_.data(), nRootNodes * sizeof(int));
-    os.write((const char*)cutIndices_.data(), nNodes * sizeof(CutIndexType));
-    os.write((const char*)cutValues_.data(), nNodes * sizeof(FeatureType));
-    os.write((const char*)leftIndices_.data(), nNodes * sizeof(int));
-    os.write((const char*)rightIndices_.data(), nNodes * sizeof(int));
-    os.write((const char*)responses_.data(), nLeaves * sizeof(TreeResponseType));
-    os.close();
 }
