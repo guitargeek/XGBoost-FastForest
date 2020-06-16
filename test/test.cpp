@@ -118,3 +118,26 @@ BOOST_AUTO_TEST_CASE(ManyfeaturesTest) {
         BOOST_CHECK_CLOSE(score, ref, tolerance);
     }
 }
+
+BOOST_AUTO_TEST_CASE(BasicTMVAXMLTest) {
+    std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};
+
+    const auto fastForest = fastforest::load_tmva_xml("continuous/model.xml", features);
+
+    std::ifstream fileX("continuous/X.csv");
+    std::ifstream filePreds("continuous/preds.csv");
+
+    std::vector<fastforest::FeatureType> input(5);
+    fastforest::FeatureType score;
+    ReferenceType ref;
+
+    for (int i = 0; i < 100; ++i) {
+        for (auto& x : input) {
+            fileX >> x;
+        }
+        score = fastForest(input.data());
+        filePreds >> ref;
+
+        BOOST_CHECK_CLOSE(score, ref, tolerance);
+    }
+}

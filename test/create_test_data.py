@@ -6,8 +6,9 @@ import pandas as pd
 
 import os
 
-csv_args = dict(header=False, index=False, sep=" ")
+import xgboost2tmva
 
+csv_args = dict(header=False, index=False, sep=" ")
 
 def create_test_data(X, y, directory, n_dump_samples=100):
     if not os.path.exists(directory):
@@ -17,6 +18,8 @@ def create_test_data(X, y, directory, n_dump_samples=100):
 
     model._Booster.dump_model(os.path.join(directory, "model.txt"))
     model._Booster.save_model(os.path.join(directory, "model.bin"))
+    feature_names = [("f" + str(i), "F") for i in range(len(y))]
+    xgboost2tmva.convert_model(model._Booster.get_dump(), feature_names, os.path.join(directory, "model.xml"))
 
     X_dump = X[:n_dump_samples]
 
@@ -26,7 +29,8 @@ def create_test_data(X, y, directory, n_dump_samples=100):
     pd.DataFrame(preds_dump).to_csv(os.path.join(directory, "preds.csv"), **csv_args)
 
 
-X, y = make_classification(n_samples=10000, n_features=5, random_state=42, n_classes=2, weights=[0.5])
+n_features = 5
+X, y = make_classification(n_samples=10000, n_features=n_features, random_state=42, n_classes=2, weights=[0.5])
 
 create_test_data(X, y, "continuous")
 
