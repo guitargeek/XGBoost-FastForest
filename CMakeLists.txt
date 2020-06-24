@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 
 project(fastforest)
-project(fastforest VERSION 0.0.1 DESCRIPTION "Minimal library code to deploy XGBoost models in C++")
+project(fastforest VERSION 0.2 LANGUAGES CXX)
 
 include_directories(include)
 
