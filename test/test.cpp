@@ -6,7 +6,6 @@
 #include <fstream>
 #include <cmath>
 
-using ReferenceType = double;
 constexpr fastforest::FeatureType tolerance = 1e-4;
 
 BOOST_AUTO_TEST_CASE(ExampleTest) {
@@ -30,7 +29,7 @@ BOOST_AUTO_TEST_CASE(BasicTest) {
 
     std::vector<fastforest::FeatureType> input(5);
     fastforest::FeatureType score;
-    ReferenceType ref;
+    double ref;
 
     for (int i = 0; i < 100; ++i) {
         for (auto& x : input) {
@@ -57,7 +56,7 @@ BOOST_AUTO_TEST_CASE(SerializationTest) {
 
     std::vector<fastforest::FeatureType> input(5);
     fastforest::FeatureType score;
-    ReferenceType ref;
+    double ref;
 
     for (int i = 0; i < 100; ++i) {
         for (auto& x : input) {
@@ -80,7 +79,7 @@ BOOST_AUTO_TEST_CASE(DiscreteTest) {
 
     std::vector<fastforest::FeatureType> input(5);
     fastforest::FeatureType score;
-    ReferenceType ref;
+    double ref;
 
     for (int i = 0; i < 100; ++i) {
         for (auto& x : input) {
@@ -106,7 +105,7 @@ BOOST_AUTO_TEST_CASE(ManyfeaturesTest) {
 
     std::vector<fastforest::FeatureType> input(features.size());
     fastforest::FeatureType score;
-    ReferenceType ref;
+    double ref;
 
     for (int i = 0; i < 100; ++i) {
         for (auto& x : input) {
@@ -118,6 +117,8 @@ BOOST_AUTO_TEST_CASE(ManyfeaturesTest) {
         BOOST_CHECK_CLOSE(score, ref, tolerance);
     }
 }
+
+#ifdef EXPERIMENTAL_TMVA_SUPPORT
 
 BOOST_AUTO_TEST_CASE(BasicTMVAXMLTest) {
     std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};
@@ -129,7 +130,7 @@ BOOST_AUTO_TEST_CASE(BasicTMVAXMLTest) {
 
     std::vector<fastforest::FeatureType> input(5);
     fastforest::FeatureType score;
-    ReferenceType ref;
+    double ref;
 
     for (int i = 0; i < 100; ++i) {
         for (auto& x : input) {
@@ -141,3 +142,5 @@ BOOST_AUTO_TEST_CASE(BasicTMVAXMLTest) {
         BOOST_CHECK_CLOSE(score, ref, tolerance);
     }
 }
+
+#endif

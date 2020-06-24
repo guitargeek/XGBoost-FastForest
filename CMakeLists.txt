@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.2)
-set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 
@@ -14,7 +13,18 @@ add_subdirectory (test)
 enable_testing ()
 add_test (NAME fastforestTest COMMAND Test WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
-file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
+
+option(EXPERIMENTAL_TMVA_SUPPORT "Build the experimental TMVA support" OFF)
+if(EXPERIMENTAL_TMVA_SUPPORT)
+    set(CMAKE_CXX_STANDARD 17)
+    file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
+    add_definitions(-DEXPERIMENTAL_TMVA_SUPPORT)
+else()
+    set(CMAKE_CXX_STANDARD 11)
+    file(GLOB_RECURSE SOURCE_FILES src/common_details.cpp src/fastforest.cpp src/FastForest.cpp)
+endif(EXPERIMENTAL_TMVA_SUPPORT)
+unset(EXPERIMENTAL_TMVA_SUPPORT CACHE)
+
 
 add_library (fastforest SHARED ${SOURCE_FILES})
 target_link_libraries(fastforest stdc++fs)

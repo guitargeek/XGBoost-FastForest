@@ -39,7 +39,7 @@ script:
   - cd test && python3 create_test_data.py && cd ..
   - mkdir build
   - cd build
-  - cmake ..
+  - cmake -DEXPERIMENTAL_TMVA_SUPPORT:bool=true ..
   - make
   - sudo make install
   - env CTEST_OUTPUT_ON_FAILURE=1 make test

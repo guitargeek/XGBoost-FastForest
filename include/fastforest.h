@@ -33,14 +33,14 @@ SOFTWARE.
 namespace fastforest {
 
     // The floating point number type that will be used to accept features and store cut values
-    using FeatureType = float;
+    typedef float FeatureType;
     // Tue floating point number type that the individual trees return their responses in
-    using TreeResponseType = float;
+    typedef float TreeResponseType;
     // The floating point number type that is used to sum the individual tree responses
-    using TreeEnsembleResponseType = float;
+    typedef float TreeEnsembleResponseType;
     // This integer type stores the indices of the feature employed in each cut.
     // Set to `unsigned char` for most compact fastforest ofjects if you have less than 256 features.
-    using CutIndexType = unsigned int;
+    typedef unsigned int CutIndexType;
 
     struct FastForest {
         TreeEnsembleResponseType operator()(const FeatureType* array) const;
@@ -56,8 +56,10 @@ namespace fastforest {
     };
 
     FastForest load_txt(std::string const& txtpath, std::vector<std::string>& features);
-    FastForest load_tmva_xml(std::string const& xmlpath, std::vector<std::string>& features);
     FastForest load_bin(std::string const& txtpath);
+#ifdef EXPERIMENTAL_TMVA_SUPPORT
+    FastForest load_tmva_xml(std::string const& xmlpath, std::vector<std::string>& features);
+#endif
 
 }  // namespace fastforest
 
