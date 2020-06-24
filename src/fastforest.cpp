@@ -32,7 +32,6 @@ SOFTWARE.
 #include <sstream>
 #include <unordered_map>
 #include <stdexcept>
-#include <experimental/filesystem>
 
 using namespace fastforest;
 
@@ -52,9 +51,10 @@ namespace {
 
         template <class NumericType>
         struct NumericAfterSubstrOutput {
-            NumericType value = 0;
-            bool found = false;
-            bool failed = true;
+            explicit NumericAfterSubstrOutput() : value{0}, found{false}, failed{true} {}
+            NumericType value;
+            bool found;
+            bool failed;
             std::string rest;
         };
 
@@ -87,6 +87,16 @@ namespace {
             }
             return splittedStrings;
         }
+
+        bool exists(std::string const& filename) {
+            if (FILE *file = fopen(filename.c_str(), "r")) {
+                fclose(file);
+                return true;
+            } else {
+                return false;
+            }   
+        }
+
     }  // namespace util
 
 }  // namespace
@@ -94,7 +104,7 @@ namespace {
 FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::string>& features) {
     const std::string info = "constructing FastForest from " + txtpath + ": ";
 
-    if (!std::experimental::filesystem::exists(txtpath)) {
+    if (!util::exists(txtpath)) {
         throw std::runtime_error(info + "file does not exists");
     }
 
