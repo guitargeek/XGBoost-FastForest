@@ -78,7 +78,7 @@ Some things to keep in mind:
 
 ### Multiclassification with softmax
 
-It is easily possible to use multiclassification trees trained with the `multi:softmax` objective.
+It is easily possible to use multiclassification models trained with the `multi:softmax` objective.
 
 In this case, you should use the `FastForest::softmax` function. In addition to the features, you need to pass
 the number of classes explicitely because this information is also not stored in the text dump of the model.

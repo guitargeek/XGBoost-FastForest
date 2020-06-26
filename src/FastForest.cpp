@@ -48,6 +48,12 @@ TreeEnsembleResponseType fastforest::FastForest::operator()(const FeatureType* a
 }
 
 std::vector<TreeEnsembleResponseType> fastforest::FastForest::softmax(const FeatureType* array, int nClasses) const {
+    if (nClasses <= 2) {
+        throw std::runtime_error(std::string{"Error in FastForest::softmax : nClasses is set to "} +
+                                 std::to_string(nClasses) + ", but it should be at least equal 3 for the " +
+                                 " multiclassification to make sense.");
+    }
+
     if (rootIndices_.size() % nClasses != 0) {
         throw std::runtime_error(std::string{"Error in FastForest::softmax : Forest has "} +
                                  std::to_string(rootIndices_.size()) + " trees, " + "which is not compatible with " +
