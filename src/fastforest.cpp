@@ -89,12 +89,12 @@ namespace {
         }
 
         bool exists(std::string const& filename) {
-            if (FILE *file = fopen(filename.c_str(), "r")) {
+            if (FILE* file = fopen(filename.c_str(), "r")) {
                 fclose(file);
                 return true;
             } else {
                 return false;
-            }   
+            }
         }
 
     }  // namespace util

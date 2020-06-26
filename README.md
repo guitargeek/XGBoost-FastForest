@@ -60,7 +60,7 @@ int main() {
 
     std::vector<float> input{0.0, 0.2, 0.4, 0.6, 0.8};
 
-    float score = 1./(1. + std::exp(-fastForest(input.data())))
+    float score = 1./(1. + std::exp(-fastForest(input.data())));
 }
 ```
 
@@ -75,6 +75,22 @@ Some things to keep in mind:
   the logistic transformation manually if you trained with `objective='binary:logistic'` and want to reproduce the results of `predict_proba()`, like in the code snippet above.
   * If you train with the `objective='binary:logitraw'`
     parameter, the output you'll get from `predict_proba()` will be without the logistic transformation, just like from the FastForest.
+
+### Multiclassification with softmax
+
+It is easily possible to use multiclassification trees trained with the `multi:softmax` objective.
+
+In this case, you should use the `FastForest::softmax` function. In addition to the features, you need to pass
+the number of classes explicitely because this information is also not stored in the text dump of the model.
+
+The function will return you a vector with the probabilites, one entry for each class.
+
+```C++
+std::vector<float> probas = fastForest.softmax(input.data(), 3);
+```
+
+For performance critical applications, this interface should probably be reconsidered to avoid the heap allocations in
+the vector construction. Please open an issue if this is the limiting factor for you.
 
 ### Performance Benchmarks
 

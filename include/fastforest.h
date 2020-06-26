@@ -45,6 +45,8 @@ namespace fastforest {
     struct FastForest {
         TreeEnsembleResponseType operator()(const FeatureType* array) const;
 
+        std::vector<TreeEnsembleResponseType> softmax(const FeatureType* array, int nClasses) const;
+
         void write_bin(std::string const& filename) const;
 
         std::vector<int> rootIndices_;

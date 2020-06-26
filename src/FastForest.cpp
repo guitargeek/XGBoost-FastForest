@@ -26,8 +26,11 @@ SOFTWARE.
 
 #include "fastforest.h"
 
+#include <cmath>
 #include <fstream>
+#include <string>
 #include <sstream>
+#include <stdexcept>
 
 using namespace fastforest;
 
@@ -42,6 +45,47 @@ TreeEnsembleResponseType fastforest::FastForest::operator()(const FeatureType* a
         response += responses_[-index];
     }
     return response;
+}
+
+std::vector<TreeEnsembleResponseType> fastforest::FastForest::softmax(const FeatureType* array, int nClasses) const {
+    if (rootIndices_.size() % nClasses != 0) {
+        throw std::runtime_error(std::string{"Error in FastForest::softmax : Forest has "} +
+                                 std::to_string(rootIndices_.size()) + " trees, " + "which is not compatible with " +
+                                 std::to_string(nClasses) + " classes!");
+    }
+
+    auto out = std::vector<TreeEnsembleResponseType>(3);
+
+    for (int iClass = 0; iClass < nClasses; ++iClass) {
+        int iRootIndex = 0;
+        TreeEnsembleResponseType response = 0.;
+        for (int index : rootIndices_) {
+            if (iRootIndex % nClasses != iClass) {
+                ++iRootIndex;
+                continue;
+            }
+            do {
+                auto r = rightIndices_[index];
+                auto l = leftIndices_[index];
+                index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
+            } while (index > 0);
+            response += responses_[-index];
+            ++iRootIndex;
+        }
+        out[iClass] = response;
+    }
+
+    // softmax transformation
+    TreeEnsembleResponseType norm = 0.;
+    for (auto& x : out) {
+        x = std::exp(x);
+        norm += x;
+    }
+    for (auto& x : out) {
+        x /= norm;
+    }
+
+    return out;
 }
 
 FastForest fastforest::load_bin(std::string const& txtpath) {
