@@ -60,7 +60,7 @@ std::vector<TreeEnsembleResponseType> fastforest::FastForest::softmax(const Feat
                                  std::to_string(nClasses) + " classes!");
     }
 
-    auto out = std::vector<TreeEnsembleResponseType>(3);
+    auto out = std::vector<TreeEnsembleResponseType>(nClasses);
 
     for (int iClass = 0; iClass < nClasses; ++iClass) {
         int iRootIndex = 0;
