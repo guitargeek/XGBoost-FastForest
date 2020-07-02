@@ -5,15 +5,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 project(fastforest)
 project(fastforest VERSION 0.2 LANGUAGES CXX)
 
-include_directories(include)
-
-add_subdirectory (src)
-add_subdirectory (test)
-
-enable_testing ()
-add_test (NAME fastforestTest COMMAND Test WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
-
-
 option(EXPERIMENTAL_TMVA_SUPPORT "Build the experimental TMVA support" OFF)
 if(EXPERIMENTAL_TMVA_SUPPORT)
     set(CMAKE_CXX_STANDARD 17)
@@ -25,6 +16,13 @@ else()
 endif(EXPERIMENTAL_TMVA_SUPPORT)
 unset(EXPERIMENTAL_TMVA_SUPPORT CACHE)
 
+include_directories(include)
+
+add_subdirectory (src)
+add_subdirectory (test)
+
+enable_testing ()
+add_test (NAME fastforestTest COMMAND Test WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
 add_library (fastforest SHARED ${SOURCE_FILES})
 target_link_libraries(fastforest stdc++fs)
