@@ -65,6 +65,29 @@ BOOST_AUTO_TEST_CASE(SoftmaxTest) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(SoftmaxArrayTest) {
+    std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};
+
+    const auto fastForest = fastforest::load_txt("softmax/model.txt", features);
+
+    std::ifstream fileX("softmax/X.csv");
+    std::ifstream filePreds("softmax/preds.csv");
+
+    std::vector<fastforest::FeatureType> input(5);
+    fastforest::FeatureType score;
+    double ref;
+
+    for (int i = 0; i < 100; ++i) {
+        for (auto& x : input) {
+            fileX >> x;
+        }
+        for (auto& x : fastForest.softmax<3>(input.data())) {
+            filePreds >> ref;
+            BOOST_CHECK_CLOSE(x, ref, tolerance);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(SerializationTest) {
     {
         std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};

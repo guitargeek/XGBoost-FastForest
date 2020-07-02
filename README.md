@@ -89,8 +89,20 @@ The function will return you a vector with the probabilites, one entry for each 
 std::vector<float> probas = fastForest.softmax(input.data(), 3);
 ```
 
-For performance critical applications, this interface should probably be reconsidered to avoid the heap allocations in
-the vector construction. Please open an issue if this is the limiting factor for you.
+For performance critical applications, this interface should not be used to avoid heap allocations in the vector
+construction. Please use either the interface that requires to know the number of classes at compile-time as a template
+parameter, or the old-school interface that writes the output into a function parameter.
+
+```C++
+{
+  std::array<float,3> probas = fastForest.softmax<3>(input.data());
+}
+// or
+{
+  std::vector<float> probas(3); // allocated somewhere outside your loop over entries
+  fastForest.softmax(input.data(), probas.data(), 3);
+}
+```
 
 ### Performance Benchmarks
 

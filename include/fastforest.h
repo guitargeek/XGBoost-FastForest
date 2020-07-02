@@ -29,6 +29,8 @@ SOFTWARE.
 
 #include <vector>
 #include <string>
+#include <array>
+#include <cmath>
 
 namespace fastforest {
 
@@ -42,10 +44,32 @@ namespace fastforest {
     // Set to `unsigned char` for most compact fastforest ofjects if you have less than 256 features.
     typedef unsigned int CutIndexType;
 
-    struct FastForest {
-        TreeEnsembleResponseType operator()(const FeatureType* array) const;
+    namespace details {
 
+        void softmaxTransformInplace(TreeEnsembleResponseType* out, int nOut);
+
+    }
+
+    struct FastForest {
+        TreeEnsembleResponseType operator()(const FeatureType* array) const {
+            TreeEnsembleResponseType out{0.};
+            evaluate(array, &out);
+            return out;
+        }
+
+        template <int nClasses>
+        std::array<TreeEnsembleResponseType, nClasses> softmax(const FeatureType* array) const {
+            // static softmax interface: no manual memory allocation, but requires to know nClasses at compile time
+            static_assert(nClasses >= 3, "nClasses should be >= 3");
+            std::array<TreeEnsembleResponseType, nClasses> out{};
+            evaluate(array, out.data(), nClasses);
+            details::softmaxTransformInplace(out.data(), nClasses);
+            return out;
+        }
+        // dynamic softmax interface with manually allocated std::vector: simple but inefficient
         std::vector<TreeEnsembleResponseType> softmax(const FeatureType* array, int nClasses) const;
+        // softmax interface that is not a pure function, but no manual allocation and no compile-time knowledge needed
+        void softmax(const FeatureType* array, TreeEnsembleResponseType* out, int nClasses) const;
 
         void write_bin(std::string const& filename) const;
 
@@ -55,6 +79,9 @@ namespace fastforest {
         std::vector<int> leftIndices_;
         std::vector<int> rightIndices_;
         std::vector<TreeResponseType> responses_;
+
+      private:
+        void evaluate(const FeatureType* array, TreeEnsembleResponseType* out, int nOut = 1) const;
     };
 
     FastForest load_txt(std::string const& txtpath, std::vector<std::string>& features);
