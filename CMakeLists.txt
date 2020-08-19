@@ -12,7 +12,7 @@ if(EXPERIMENTAL_TMVA_SUPPORT)
     add_definitions(-DEXPERIMENTAL_TMVA_SUPPORT)
 else()
     set(CMAKE_CXX_STANDARD 11)
-    file(GLOB_RECURSE SOURCE_FILES src/common_details.cpp src/fastforest.cpp src/FastForest.cpp)
+    file(GLOB_RECURSE SOURCE_FILES src/common_details.cpp src/fastforest_functions.cpp src/fastforest.cpp)
 endif(EXPERIMENTAL_TMVA_SUPPORT)
 unset(EXPERIMENTAL_TMVA_SUPPORT CACHE)
 

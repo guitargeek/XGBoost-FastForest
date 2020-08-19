@@ -25,182 +25,112 @@ SOFTWARE.
 */
 
 #include "fastforest.h"
-#include "common_details.h"
 
-#include <iostream>
 #include <fstream>
+#include <string>
 #include <sstream>
-#include <unordered_map>
 #include <stdexcept>
 
 using namespace fastforest;
 
-namespace {
+void fastforest::details::softmaxTransformInplace(TreeEnsembleResponseType* out, int nOut) {
+    // do softmax transformation inplace
+    TreeEnsembleResponseType norm = 0.;
+    int i = 0;
+    for (; i < nOut; ++i) {
+        auto& x = out[i];
+        x = std::exp(x);
+        norm += x;
+    }
+    i = 0;
+    for (; i < nOut; ++i) {
+        auto& x = out[i];
+        x /= norm;
+    }
+}
 
-    namespace util {
+std::vector<TreeEnsembleResponseType> fastforest::FastForest::softmax(const FeatureType* array, int nClasses) const {
+    auto out = std::vector<TreeEnsembleResponseType>(nClasses);
+    softmax(array, out.data(), nClasses);
+    return out;
+}
 
-        inline bool isInteger(const std::string& s) {
-            if (s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+')))
-                return false;
-
-            char* p;
-            strtol(s.c_str(), &p, 10);
-
-            return (*p == 0);
-        }
-
-        template <class NumericType>
-        struct NumericAfterSubstrOutput {
-            explicit NumericAfterSubstrOutput() : value{0}, found{false}, failed{true} {}
-            NumericType value;
-            bool found;
-            bool failed;
-            std::string rest;
-        };
-
-        template <class NumericType>
-        inline NumericAfterSubstrOutput<NumericType> numericAfterSubstr(std::string const& str,
-                                                                        std::string const& substr) {
-            std::string rest;
-            NumericAfterSubstrOutput<NumericType> output;
-            output.rest = str;
-
-            auto found = str.find(substr);
-            if (found != std::string::npos) {
-                output.found = true;
-                std::stringstream ss(str.substr(found + substr.size(), str.size() - found + substr.size()));
-                ss >> output.value;
-                if (!ss.fail()) {
-                    output.failed = false;
-                    output.rest = ss.str();
-                }
-            }
-            return output;
-        }
-
-        std::vector<std::string> split(std::string const& strToSplit, char delimeter) {
-            std::stringstream ss(strToSplit);
-            std::string item;
-            std::vector<std::string> splittedStrings;
-            while (std::getline(ss, item, delimeter)) {
-                splittedStrings.push_back(item);
-            }
-            return splittedStrings;
-        }
-
-        bool exists(std::string const& filename) {
-            if (FILE* file = fopen(filename.c_str(), "r")) {
-                fclose(file);
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-    }  // namespace util
-
-}  // namespace
-
-FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::string>& features) {
-    const std::string info = "constructing FastForest from " + txtpath + ": ";
-
-    if (!util::exists(txtpath)) {
-        throw std::runtime_error(info + "file does not exists");
+void fastforest::FastForest::softmax(const FeatureType* array, TreeEnsembleResponseType* out, int nClasses) const {
+    if (nClasses <= 2) {
+        throw std::runtime_error(std::string{"Error in FastForest::softmax : nClasses is set to "} +
+                                 std::to_string(nClasses) + ", but it should be at least equal 3 for the " +
+                                 " multiclassification to make sense.");
     }
 
+    evaluate(array, out, nClasses);
+    fastforest::details::softmaxTransformInplace(out, nClasses);
+}
+
+void fastforest::FastForest::evaluate(const FeatureType* array, TreeEnsembleResponseType* out, int nOut) const {
+    if (rootIndices_.size() % nOut != 0) {
+        throw std::runtime_error(std::string{"Error in FastForest::softmax : Forest has "} +
+                                 std::to_string(rootIndices_.size()) + " trees, " + "which is not compatible with " +
+                                 std::to_string(nOut) + " classes!");
+    }
+
+    int iRootIndex = 0;
+    for (int index : rootIndices_) {
+        do {
+            auto r = rightIndices_[index];
+            auto l = leftIndices_[index];
+            index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
+        } while (index > 0);
+        out[iRootIndex % nOut] += responses_[-index];
+        ++iRootIndex;
+    }
+}
+
+FastForest fastforest::load_bin(std::string const& txtpath) {
     FastForest ff;
 
-    std::ifstream file(txtpath);
+    std::ifstream is(txtpath, std::ios::binary);
 
-    int nVariables = 0;
-    std::unordered_map<std::string, int> varIndices;
-    bool fixFeatures = false;
+    int nRootNodes = ff.rootIndices_.size();
+    int nNodes = ff.cutValues_.size();
+    int nLeaves = ff.responses_.size();
 
-    if (!features.empty()) {
-        fixFeatures = true;
-        nVariables = features.size();
-        for (int i = 0; i < nVariables; ++i) {
-            varIndices[features[i]] = i;
-        }
-    }
+    is.read((char*)&nRootNodes, sizeof(int));
+    is.read((char*)&nNodes, sizeof(int));
+    is.read((char*)&nLeaves, sizeof(int));
 
-    std::string line;
+    ff.rootIndices_.resize(nRootNodes);
+    ff.cutIndices_.resize(nNodes);
+    ff.cutValues_.resize(nNodes);
+    ff.leftIndices_.resize(nNodes);
+    ff.rightIndices_.resize(nNodes);
+    ff.responses_.resize(nLeaves);
 
-    std::unordered_map<int, int> nodeIndices;
-    std::unordered_map<int, int> leafIndices;
-
-    int nPreviousNodes = 0;
-    int nPreviousLeaves = 0;
-
-    while (std::getline(file, line)) {
-        auto foundBegin = line.find("[");
-        auto foundEnd = line.find("]");
-        if (foundBegin != std::string::npos) {
-            auto subline = line.substr(foundBegin + 1, foundEnd - foundBegin - 1);
-            if (util::isInteger(subline)) {
-                detail::correctIndices(
-                    ff.rightIndices_.begin() + nPreviousNodes, ff.rightIndices_.end(), nodeIndices, leafIndices);
-                detail::correctIndices(
-                    ff.leftIndices_.begin() + nPreviousNodes, ff.leftIndices_.end(), nodeIndices, leafIndices);
-                nodeIndices.clear();
-                leafIndices.clear();
-                nPreviousNodes = ff.cutValues_.size();
-                nPreviousLeaves = ff.responses_.size();
-                ff.rootIndices_.push_back(nPreviousNodes);
-            } else {
-                std::stringstream ss(line);
-                int index;
-                ss >> index;
-                line = ss.str();
-
-                auto splitstring = util::split(subline, '<');
-                auto const& varName = splitstring[0];
-                FeatureType cutValue = std::stold(splitstring[1]);
-                if (!varIndices.count(varName)) {
-                    if (fixFeatures) {
-                        throw std::runtime_error(info + "feature " + varName + " not in list of features");
-                    }
-                    varIndices[varName] = nVariables;
-                    features.push_back(varName);
-                    ++nVariables;
-                }
-                int yes;
-                int no;
-                auto output = util::numericAfterSubstr<int>(line, "yes=");
-                if (!output.failed) {
-                    yes = output.value;
-                } else {
-                    throw std::runtime_error(info + "problem while parsing the text dump");
-                }
-                output = util::numericAfterSubstr<int>(output.rest, "no=");
-                if (!output.failed) {
-                    no = output.value;
-                } else {
-                    throw std::runtime_error(info + "problem while parsing the text dump");
-                }
-
-                ff.cutValues_.push_back(cutValue);
-                ff.cutIndices_.push_back(varIndices[varName]);
-                ff.leftIndices_.push_back(yes);
-                ff.rightIndices_.push_back(no);
-                nodeIndices[index] = nodeIndices.size() + nPreviousNodes;
-            }
-
-        } else {
-            auto output = util::numericAfterSubstr<TreeResponseType>(line, "leaf=");
-            if (output.found) {
-                std::stringstream ss(line);
-                int index;
-                ss >> index;
-                line = ss.str();
-
-                ff.responses_.push_back(output.value);
-                leafIndices[index] = leafIndices.size() + nPreviousLeaves;
-            }
-        }
-    }
-    detail::correctIndices(ff.rightIndices_.begin() + nPreviousNodes, ff.rightIndices_.end(), nodeIndices, leafIndices);
-    detail::correctIndices(ff.leftIndices_.begin() + nPreviousNodes, ff.leftIndices_.end(), nodeIndices, leafIndices);
+    is.read((char*)ff.rootIndices_.data(), nRootNodes * sizeof(int));
+    is.read((char*)ff.cutIndices_.data(), nNodes * sizeof(CutIndexType));
+    is.read((char*)ff.cutValues_.data(), nNodes * sizeof(FeatureType));
+    is.read((char*)ff.leftIndices_.data(), nNodes * sizeof(int));
+    is.read((char*)ff.rightIndices_.data(), nNodes * sizeof(int));
+    is.read((char*)ff.responses_.data(), nLeaves * sizeof(TreeResponseType));
 
     return ff;
+}
+
+void fastforest::FastForest::write_bin(std::string const& filename) const {
+    std::ofstream os(filename, std::ios::binary);
+
+    int nRootNodes = rootIndices_.size();
+    int nNodes = cutValues_.size();
+    int nLeaves = responses_.size();
+
+    os.write((const char*)&nRootNodes, sizeof(int));
+    os.write((const char*)&nNodes, sizeof(int));
+    os.write((const char*)&nLeaves, sizeof(int));
+
+    os.write((const char*)rootIndices_.data(), nRootNodes * sizeof(int));
+    os.write((const char*)cutIndices_.data(), nNodes * sizeof(CutIndexType));
+    os.write((const char*)cutValues_.data(), nNodes * sizeof(FeatureType));
+    os.write((const char*)leftIndices_.data(), nNodes * sizeof(int));
+    os.write((const char*)rightIndices_.data(), nNodes * sizeof(int));
+    os.write((const char*)responses_.data(), nLeaves * sizeof(TreeResponseType));
+    os.close();
 }
