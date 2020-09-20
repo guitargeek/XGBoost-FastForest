@@ -32,8 +32,8 @@ SOFTWARE.
 
 void fastforest::detail::correctIndices(std::vector<int>::iterator begin,
                                         std::vector<int>::iterator end,
-                                        std::unordered_map<int, int> const& nodeIndices,
-                                        std::unordered_map<int, int> const& leafIndices) {
+                                        fastforest::detail::IndexMap const& nodeIndices,
+                                        fastforest::detail::IndexMap const& leafIndices) {
     for (auto it = begin; it != end; ++it) {
         if (nodeIndices.count(*it)) {
             *it = nodeIndices.at(*it);

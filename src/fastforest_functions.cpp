@@ -126,8 +126,8 @@ FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::str
 
     std::string line;
 
-    std::unordered_map<int, int> nodeIndices;
-    std::unordered_map<int, int> leafIndices;
+    fastforest::detail::IndexMap nodeIndices;
+    fastforest::detail::IndexMap leafIndices;
 
     int nPreviousNodes = 0;
     int nPreviousLeaves = 0;
@@ -183,7 +183,7 @@ FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::str
                 ff.cutIndices_.push_back(varIndices[varName]);
                 ff.leftIndices_.push_back(yes);
                 ff.rightIndices_.push_back(no);
-                nodeIndices[index] = nodeIndices.size() + nPreviousNodes;
+                detail::safeIndexMapInsert(nodeIndices, index, nodeIndices.size() + nPreviousNodes);
             }
 
         } else {
@@ -195,7 +195,7 @@ FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::str
                 line = ss.str();
 
                 ff.responses_.push_back(output.value);
-                leafIndices[index] = leafIndices.size() + nPreviousLeaves;
+                detail::safeIndexMapInsert(leafIndices, index, leafIndices.size() + nPreviousLeaves);
             }
         }
     }

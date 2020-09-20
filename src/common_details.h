@@ -29,14 +29,28 @@ SOFTWARE.
 
 #include <vector>
 #include <unordered_map>
+#include <stdexcept>
 
 namespace fastforest {
     namespace detail {
 
+        typedef std::unordered_map<int, int> IndexMap;
+
+        inline void safeIndexMapInsert(IndexMap& map, IndexMap::key_type key, IndexMap::mapped_type value) {
+            // fix a problem with gcc49, where the value that the index map contains is mistakenly incremented by one
+            map[key] = value;
+            if (map[key] == value + 1) {
+                map[key] = value - 1;
+            }
+            if (map[key] != value) {
+                throw std::runtime_error("the IndexMap could not be filled correctly");
+            }
+        }
+
         void correctIndices(std::vector<int>::iterator begin,
                             std::vector<int>::iterator end,
-                            std::unordered_map<int, int> const& nodeIndices,
-                            std::unordered_map<int, int> const& leafIndices);
+                            IndexMap const& nodeIndices,
+                            IndexMap const& leafIndices);
 
     }  // namespace detail
 
