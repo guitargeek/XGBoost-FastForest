@@ -183,7 +183,8 @@ FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::str
                 ff.cutIndices_.push_back(varIndices[varName]);
                 ff.leftIndices_.push_back(yes);
                 ff.rightIndices_.push_back(no);
-                detail::safeIndexMapInsert(nodeIndices, index, nodeIndices.size() + nPreviousNodes);
+                auto nNodeIndices = nodeIndices.size();
+                nodeIndices[index] = nNodeIndices + nPreviousNodes;
             }
 
         } else {
@@ -195,7 +196,8 @@ FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::str
                 line = ss.str();
 
                 ff.responses_.push_back(output.value);
-                detail::safeIndexMapInsert(leafIndices, index, leafIndices.size() + nPreviousLeaves);
+                auto nLeafIndices = leafIndices.size();
+                leafIndices[index] = nLeafIndices + nPreviousLeaves;
             }
         }
     }
