@@ -3,7 +3,7 @@ import numpy as np
 
 byteorder = "little"
 
-with open(sys.argv[-1], 'rb') as f:
+with open(sys.argv[-1], "rb") as f:
     nRootNodes = int.from_bytes(f.read(4), byteorder)
     nNodes = int.from_bytes(f.read(4), byteorder)
     nLeaves = int.from_bytes(f.read(4), byteorder)

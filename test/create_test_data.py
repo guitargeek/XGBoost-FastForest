@@ -11,11 +11,13 @@ import xgboost2tmva
 csv_args = dict(header=False, index=False, sep=" ")
 
 
-def create_test_data(X, y, directory, n_dump_samples=100, objective="binary:logitraw"):
+def create_test_data(X, y, directory, n_dump_samples=100, objective="binary:logitraw", eval_metric="logloss"):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    model = XGBClassifier(n_estimators=100, max_depth=7, objective=objective).fit(X, y)
+    model = XGBClassifier(
+        n_estimators=100, max_depth=7, objective=objective, eval_metric=eval_metric, use_label_encoder=False
+    ).fit(X, y)
 
     model._Booster.dump_model(os.path.join(directory, "model.txt"))
     model._Booster.save_model(os.path.join(directory, "model.bin"))
@@ -38,7 +40,7 @@ X, y = make_classification(n_samples=10000, n_features=n_features, random_state=
 
 create_test_data(X, y, "continuous")
 
-X_discrete = np.array(X, dtype=np.int) * 2
+X_discrete = np.array(X, dtype=int) * 2
 
 create_test_data(X_discrete, y, "discrete")
 # Why do we add +1 here? It's to cover the test case where integer features lie exactly on the cut values.
@@ -58,4 +60,4 @@ create_test_data(df.values, y, "manyfeatures")
 X, y = make_classification(
     n_samples=10000, n_features=5, n_informative=3, random_state=42, n_classes=3, weights=[0.33, 0.33]
 )
-create_test_data(X, y, "softmax", objective="multi:softmax")
+create_test_data(X, y, "softmax", objective="multi:softmax", eval_metric="mlogloss")

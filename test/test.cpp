@@ -7,6 +7,8 @@
 #include <cmath>
 
 constexpr fastforest::FeatureType tolerance = 1e-4;
+constexpr std::size_t nSamples = 100;
+using RefPredictionType = float;
 
 BOOST_AUTO_TEST_CASE(ExampleTest) {
     std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};
@@ -29,9 +31,9 @@ BOOST_AUTO_TEST_CASE(BasicTest) {
 
     std::vector<fastforest::FeatureType> input(5);
     fastforest::FeatureType score;
-    double ref;
+    RefPredictionType ref;
 
-    for (int i = 0; i < 100; ++i) {
+    for (std::size_t i = 0; i < nSamples; ++i) {
         for (auto& x : input) {
             fileX >> x;
         }
@@ -52,9 +54,9 @@ BOOST_AUTO_TEST_CASE(SoftmaxTest) {
 
     std::vector<fastforest::FeatureType> input(5);
     fastforest::FeatureType score;
-    double ref;
+    RefPredictionType ref;
 
-    for (int i = 0; i < 100; ++i) {
+    for (std::size_t i = 0; i < nSamples; ++i) {
         for (auto& x : input) {
             fileX >> x;
         }
@@ -75,9 +77,9 @@ BOOST_AUTO_TEST_CASE(SoftmaxArrayTest) {
 
     std::vector<fastforest::FeatureType> input(5);
     fastforest::FeatureType score;
-    double ref;
+    RefPredictionType ref;
 
-    for (int i = 0; i < 100; ++i) {
+    for (std::size_t i = 0; i < nSamples; ++i) {
         for (auto& x : input) {
             fileX >> x;
         }
@@ -102,9 +104,9 @@ BOOST_AUTO_TEST_CASE(SerializationTest) {
 
     std::vector<fastforest::FeatureType> input(5);
     fastforest::FeatureType score;
-    double ref;
+    RefPredictionType ref;
 
-    for (int i = 0; i < 100; ++i) {
+    for (std::size_t i = 0; i < nSamples; ++i) {
         for (auto& x : input) {
             fileX >> x;
         }
@@ -125,9 +127,9 @@ BOOST_AUTO_TEST_CASE(DiscreteTest) {
 
     std::vector<fastforest::FeatureType> input(5);
     fastforest::FeatureType score;
-    double ref;
+    RefPredictionType ref;
 
-    for (int i = 0; i < 100; ++i) {
+    for (std::size_t i = 0; i < nSamples; ++i) {
         for (auto& x : input) {
             fileX >> x;
         }
@@ -151,9 +153,9 @@ BOOST_AUTO_TEST_CASE(ManyfeaturesTest) {
 
     std::vector<fastforest::FeatureType> input(features.size());
     fastforest::FeatureType score;
-    double ref;
+    RefPredictionType ref;
 
-    for (int i = 0; i < 100; ++i) {
+    for (std::size_t i = 0; i < nSamples; ++i) {
         for (auto& x : input) {
             fileX >> x;
         }
@@ -176,9 +178,9 @@ BOOST_AUTO_TEST_CASE(BasicTMVAXMLTest) {
 
     std::vector<fastforest::FeatureType> input(5);
     fastforest::FeatureType score;
-    double ref;
+    RefPredictionType ref;
 
-    for (int i = 0; i < 100; ++i) {
+    for (std::size_t i = 0; i < nSamples; ++i) {
         for (auto& x : input) {
             fileX >> x;
         }

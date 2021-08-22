@@ -34,43 +34,60 @@ SOFTWARE.
 using namespace fastforest;
 
 void fastforest::details::softmaxTransformInplace(TreeEnsembleResponseType* out, int nOut) {
-    // do softmax transformation inplace
-    TreeEnsembleResponseType norm = 0.;
-    int i = 0;
+    // Do softmax transformation inplace, mimicing exactly the Softmax function
+    // in the src/common/math.h source file of xgboost.
+    double norm = 0.;
+    TreeEnsembleResponseType wmax = *out;
+    int i = 1;
     for (; i < nOut; ++i) {
-        auto& x = out[i];
-        x = std::exp(x);
-        norm += x;
+        wmax = std::max(out[i], wmax);
     }
     i = 0;
     for (; i < nOut; ++i) {
         auto& x = out[i];
-        x /= norm;
+        x = std::exp(x - wmax);
+        norm += x;
+    }
+    i = 0;
+    for (; i < nOut; ++i) {
+        out[i] /= static_cast<float>(norm);
     }
 }
 
-std::vector<TreeEnsembleResponseType> fastforest::FastForest::softmax(const FeatureType* array, int nClasses) const {
+std::vector<TreeEnsembleResponseType> fastforest::FastForest::softmax(const FeatureType* array,
+                                                                      int nClasses,
+                                                                      TreeEnsembleResponseType baseResponse) const {
     auto out = std::vector<TreeEnsembleResponseType>(nClasses);
-    softmax(array, out.data(), nClasses);
+    softmax(array, out.data(), nClasses, baseResponse);
     return out;
 }
 
-void fastforest::FastForest::softmax(const FeatureType* array, TreeEnsembleResponseType* out, int nClasses) const {
+void fastforest::FastForest::softmax(const FeatureType* array,
+                                     TreeEnsembleResponseType* out,
+                                     int nClasses,
+                                     TreeEnsembleResponseType baseResponse) const {
     if (nClasses <= 2) {
         throw std::runtime_error(std::string{"Error in FastForest::softmax : nClasses is set to "} +
                                  std::to_string(nClasses) + ", but it should be at least equal 3 for the " +
                                  " multiclassification to make sense.");
     }
 
-    evaluate(array, out, nClasses);
+    evaluate(array, out, nClasses, baseResponse);
     fastforest::details::softmaxTransformInplace(out, nClasses);
 }
 
-void fastforest::FastForest::evaluate(const FeatureType* array, TreeEnsembleResponseType* out, int nOut) const {
+void fastforest::FastForest::evaluate(const FeatureType* array,
+                                      TreeEnsembleResponseType* out,
+                                      int nOut,
+                                      TreeEnsembleResponseType baseResponse) const {
     if (rootIndices_.size() % nOut != 0) {
         throw std::runtime_error(std::string{"Error in FastForest::softmax : Forest has "} +
                                  std::to_string(rootIndices_.size()) + " trees, " + "which is not compatible with " +
                                  std::to_string(nOut) + " classes!");
+    }
+
+    for (int i = 0; i < nOut; ++i) {
+        out[i] = baseResponse;
     }
 
     int iRootIndex = 0;
