@@ -108,9 +108,15 @@ FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::str
         throw std::runtime_error(info + "file does not exists");
     }
 
-    FastForest ff;
-
     std::ifstream file(txtpath);
+    return load_txt(file, features);
+}
+
+
+FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& features) {
+    const std::string info = "constructing FastForest from istream: ";
+
+    FastForest ff;
 
     int nVariables = 0;
     std::unordered_map<std::string, int> varIndices;
