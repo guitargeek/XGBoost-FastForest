@@ -86,9 +86,12 @@ void fastforest::FastForest::evaluate(const FeatureType* array, TreeEnsembleResp
 }
 
 FastForest fastforest::load_bin(std::string const& txtpath) {
-    FastForest ff;
+    std::ifstream ifs(txtpath, std::ios::binary);
+    return load_bin(ifs);
+}
 
-    std::ifstream is(txtpath, std::ios::binary);
+FastForest fastforest::load_bin(std::istream& is) {
+    FastForest ff;
 
     int nRootNodes = ff.rootIndices_.size();
     int nNodes = ff.cutValues_.size();

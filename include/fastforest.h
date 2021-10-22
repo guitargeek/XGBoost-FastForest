@@ -31,6 +31,7 @@ SOFTWARE.
 #include <string>
 #include <array>
 #include <cmath>
+#include <istream>
 
 namespace fastforest {
 
@@ -85,7 +86,9 @@ namespace fastforest {
     };
 
     FastForest load_txt(std::string const& txtpath, std::vector<std::string>& features);
+    FastForest load_txt(std::istream& is, std::vector<std::string>& features);
     FastForest load_bin(std::string const& txtpath);
+    FastForest load_bin(std::istream& is);
 #ifdef EXPERIMENTAL_TMVA_SUPPORT
     FastForest load_tmva_xml(std::string const& xmlpath, std::vector<std::string>& features);
 #endif
