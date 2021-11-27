@@ -91,14 +91,23 @@ void fastforest::FastForest::evaluate(const FeatureType* array,
     }
 
     int iRootIndex = 0;
-    for (int index : rootIndices_) {
-        do {
-            auto r = rightIndices_[index];
-            auto l = leftIndices_[index];
-            index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
-        } while (index > 0);
+    for (int iRootIndex = 0; iRootIndex < rootIndices_.size(); ++iRootIndex) {
+        int index = rootIndices_[iRootIndex];
+        bool isSingleLeafTree = index < 0;
+        if (isSingleLeafTree) {
+            // If the root index is negative, it means that the tree only has a
+            // single leaf and we should jump straight into the leaves array.
+            // However, the actual index is encoded as the index minus one, so
+            // we don't get an ambiguity of zero. We add back that one now.
+            index++;
+        } else {
+            do {
+                auto r = rightIndices_[index];
+                auto l = leftIndices_[index];
+                index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
+            } while (index > 0);
+        }
         out[iRootIndex % nOut] += responses_[-index];
-        ++iRootIndex;
     }
 }
 

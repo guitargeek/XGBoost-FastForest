@@ -67,6 +67,33 @@ BOOST_AUTO_TEST_CASE(SoftmaxTest) {
     }
 }
 
+// This test covers the case of trees with a single leaf node.
+BOOST_AUTO_TEST_CASE(SoftmaxNSamples100NFeatures100Test) {
+    std::vector<std::string> features;
+    for (std::size_t i = 0; i < 100; ++i) {
+        features.emplace_back(std::string("f") + std::to_string(i));
+    }
+
+    const auto fastForest = fastforest::load_txt("softmax_n_samples_100_n_features_100/model.txt", features);
+
+    std::ifstream fileX("softmax_n_samples_100_n_features_100/X.csv");
+    std::ifstream filePreds("softmax_n_samples_100_n_features_100/preds.csv");
+
+    std::vector<fastforest::FeatureType> input(features.size());
+    fastforest::FeatureType score;
+    RefPredictionType ref;
+
+    for (std::size_t i = 0; i < nSamples; ++i) {
+        for (auto& x : input) {
+            fileX >> x;
+        }
+        for (auto& x : fastForest.softmax(input.data(), 3)) {
+            filePreds >> ref;
+            BOOST_CHECK_CLOSE(x, ref, tolerance);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(SoftmaxArrayTest) {
     std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};
 

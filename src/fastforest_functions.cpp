@@ -99,6 +99,29 @@ namespace {
 
     }  // namespace util
 
+    void terminateTree(fastforest::FastForest& ff,
+                       int& nPreviousNodes,
+                       int& nPreviousLeaves,
+                       fastforest::detail::IndexMap& nodeIndices,
+                       fastforest::detail::IndexMap& leafIndices) {
+        using namespace fastforest::detail;
+        correctIndices(ff.rightIndices_.begin() + nPreviousNodes, ff.rightIndices_.end(), nodeIndices, leafIndices);
+        correctIndices(ff.leftIndices_.begin() + nPreviousNodes, ff.leftIndices_.end(), nodeIndices, leafIndices);
+
+        bool isSingleLeafTree = nPreviousNodes == ff.cutValues_.size();
+
+        // If the root index is negative, it means that the tree only has a
+        // single leaf and we should jump straight into the leaves array. The
+        // index is encoded as the index minus one, so we don't get an
+        // ambiguity for zero.
+        ff.rootIndices_.push_back(isSingleLeafTree ? -nPreviousLeaves - 1 : nPreviousNodes);
+
+        nodeIndices.clear();
+        leafIndices.clear();
+        nPreviousNodes = ff.cutValues_.size();
+        nPreviousLeaves = ff.responses_.size();
+    }
+
 }  // namespace
 
 FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::string>& features) {
@@ -111,7 +134,6 @@ FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::str
     std::ifstream file(txtpath);
     return load_txt(file, features);
 }
-
 
 FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& features) {
     const std::string info = "constructing FastForest from istream: ";
@@ -143,17 +165,9 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
         auto foundEnd = line.find("]");
         if (foundBegin != std::string::npos) {
             auto subline = line.substr(foundBegin + 1, foundEnd - foundBegin - 1);
-            if (util::isInteger(subline)) {
-                detail::correctIndices(
-                    ff.rightIndices_.begin() + nPreviousNodes, ff.rightIndices_.end(), nodeIndices, leafIndices);
-                detail::correctIndices(
-                    ff.leftIndices_.begin() + nPreviousNodes, ff.leftIndices_.end(), nodeIndices, leafIndices);
-                nodeIndices.clear();
-                leafIndices.clear();
-                nPreviousNodes = ff.cutValues_.size();
-                nPreviousLeaves = ff.responses_.size();
-                ff.rootIndices_.push_back(nPreviousNodes);
-            } else {
+            if (util::isInteger(subline) && !ff.responses_.empty()) {
+                terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices);
+            } else if (!util::isInteger(subline)) {
                 std::stringstream ss(line);
                 int index;
                 ss >> index;
@@ -207,8 +221,7 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
             }
         }
     }
-    detail::correctIndices(ff.rightIndices_.begin() + nPreviousNodes, ff.rightIndices_.end(), nodeIndices, leafIndices);
-    detail::correctIndices(ff.leftIndices_.begin() + nPreviousNodes, ff.leftIndices_.end(), nodeIndices, leafIndices);
+    terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices);
 
     return ff;
 }
