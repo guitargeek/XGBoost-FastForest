@@ -292,6 +292,7 @@ namespace fastforest {
 
     FastForest load_slowforest(SlowForest const& xgb, std::vector<std::string>& features) {
         FastForest ff;
+        ff.baseResponses_.resize(2);
 
         int nVariables = 0;
         std::unordered_map<std::string, int> varIndices;

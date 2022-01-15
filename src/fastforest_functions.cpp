@@ -33,6 +33,8 @@ SOFTWARE.
 #include <unordered_map>
 #include <stdexcept>
 
+#include <iostream>
+
 using namespace fastforest;
 
 namespace {
@@ -103,18 +105,21 @@ namespace {
                        int& nPreviousNodes,
                        int& nPreviousLeaves,
                        fastforest::detail::IndexMap& nodeIndices,
-                       fastforest::detail::IndexMap& leafIndices) {
+                       fastforest::detail::IndexMap& leafIndices,
+                       int& treesSkipped) {
         using namespace fastforest::detail;
         correctIndices(ff.rightIndices_.begin() + nPreviousNodes, ff.rightIndices_.end(), nodeIndices, leafIndices);
         correctIndices(ff.leftIndices_.begin() + nPreviousNodes, ff.leftIndices_.end(), nodeIndices, leafIndices);
 
-        bool isSingleLeafTree = nPreviousNodes == ff.cutValues_.size();
-
-        // If the root index is negative, it means that the tree only has a
-        // single leaf and we should jump straight into the leaves array. The
-        // index is encoded as the index minus one, so we don't get an
-        // ambiguity for zero.
-        ff.rootIndices_.push_back(isSingleLeafTree ? -nPreviousLeaves - 1 : nPreviousNodes);
+        if (nPreviousNodes != ff.cutValues_.size()) {
+            ff.treeNumbers_.push_back(ff.rootIndices_.size() + treesSkipped);
+            ff.rootIndices_.push_back(nPreviousNodes);
+        } else {
+            int treeNumbers = ff.rootIndices_.size() + treesSkipped;
+            ++treesSkipped;
+            ff.baseResponses_[treeNumbers % ff.baseResponses_.size()] += ff.responses_.back();
+            ff.responses_.pop_back();
+        }
 
         nodeIndices.clear();
         leafIndices.clear();
@@ -124,7 +129,7 @@ namespace {
 
 }  // namespace
 
-FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::string>& features) {
+FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::string>& features, int nClasses) {
     const std::string info = "constructing FastForest from " + txtpath + ": ";
 
     if (!util::exists(txtpath)) {
@@ -132,13 +137,20 @@ FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::str
     }
 
     std::ifstream file(txtpath);
-    return load_txt(file, features);
+    return load_txt(file, features, nClasses);
 }
 
-FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& features) {
+FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& features, int nClasses) {
+    if (nClasses < 2) {
+        throw std::runtime_error("Error in fastforest::load_txt : nClasses has to be at least two");
+    }
+
     const std::string info = "constructing FastForest from istream: ";
 
     FastForest ff;
+    ff.baseResponses_.resize(nClasses == 2 ? 1 : nClasses);
+
+    int treesSkipped = 0;
 
     int nVariables = 0;
     std::unordered_map<std::string, int> varIndices;
@@ -166,7 +178,7 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
         if (foundBegin != std::string::npos) {
             auto subline = line.substr(foundBegin + 1, foundEnd - foundBegin - 1);
             if (util::isInteger(subline) && !ff.responses_.empty()) {
-                terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices);
+                terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices, treesSkipped);
             } else if (!util::isInteger(subline)) {
                 std::stringstream ss(line);
                 int index;
@@ -221,7 +233,13 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
             }
         }
     }
-    terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices);
+    terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices, treesSkipped);
+
+    if (nClasses > 2 && (ff.rootIndices_.size() + treesSkipped) % nClasses != 0) {
+        throw std::runtime_error(std::string{"Error in FastForest construction : Forest has "} +
+                                 std::to_string(ff.rootIndices_.size()) + " trees, " + "which is not compatible with " +
+                                 std::to_string(nClasses) + " classes!");
+    }
 
     return ff;
 }

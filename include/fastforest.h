@@ -27,11 +27,11 @@ SOFTWARE.
 #ifndef FastForest_h
 #define FastForest_h
 
-#include <vector>
-#include <string>
 #include <array>
 #include <cmath>
 #include <istream>
+#include <string>
+#include <vector>
 
 namespace fastforest {
 
@@ -57,11 +57,9 @@ namespace fastforest {
     }
 
     struct FastForest {
-        TreeEnsembleResponseType operator()(const FeatureType* array,
-                                            TreeEnsembleResponseType baseResponse = defaultBaseResponse) const {
-            TreeEnsembleResponseType out{0.};
-            evaluate(array, &out, 1, baseResponse);
-            return out;
+        inline TreeEnsembleResponseType operator()(const FeatureType* array,
+                                                   TreeEnsembleResponseType baseResponse = defaultBaseResponse) const {
+            return evaluateBinary(array, baseResponse);
         }
 
         template <int nClasses>
@@ -74,16 +72,19 @@ namespace fastforest {
             details::softmaxTransformInplace(out.data(), nClasses);
             return out;
         }
+
         // dynamic softmax interface with manually allocated std::vector: simple but inefficient
         std::vector<TreeEnsembleResponseType> softmax(
-            const FeatureType* array, int nClasses, TreeEnsembleResponseType baseResponse = defaultBaseResponse) const;
+            const FeatureType* array, TreeEnsembleResponseType baseResponse = defaultBaseResponse) const;
+
         // softmax interface that is not a pure function, but no manual allocation and no compile-time knowledge needed
         void softmax(const FeatureType* array,
                      TreeEnsembleResponseType* out,
-                     int nClasses,
                      TreeEnsembleResponseType baseResponse = defaultBaseResponse) const;
 
         void write_bin(std::string const& filename) const;
+
+        int nClasses() const { return baseResponses_.size() > 2 ? baseResponses_.size() : 2; }
 
         std::vector<int> rootIndices_;
         std::vector<CutIndexType> cutIndices_;
@@ -91,16 +92,20 @@ namespace fastforest {
         std::vector<int> leftIndices_;
         std::vector<int> rightIndices_;
         std::vector<TreeResponseType> responses_;
+        std::vector<int> treeNumbers_;
+        std::vector<TreeEnsembleResponseType> baseResponses_;
 
       private:
         void evaluate(const FeatureType* array,
                       TreeEnsembleResponseType* out,
                       int nOut,
                       TreeEnsembleResponseType baseResponse) const;
+
+        TreeEnsembleResponseType evaluateBinary(const FeatureType* array, TreeEnsembleResponseType baseResponse) const;
     };
 
-    FastForest load_txt(std::string const& txtpath, std::vector<std::string>& features);
-    FastForest load_txt(std::istream& is, std::vector<std::string>& features);
+    FastForest load_txt(std::string const& txtpath, std::vector<std::string>& features, int nClasses = 2);
+    FastForest load_txt(std::istream& is, std::vector<std::string>& features, int nClasses = 2);
     FastForest load_bin(std::string const& txtpath);
     FastForest load_bin(std::istream& is);
 #ifdef EXPERIMENTAL_TMVA_SUPPORT

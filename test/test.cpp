@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(BasicTest) {
 BOOST_AUTO_TEST_CASE(SoftmaxTest) {
     std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};
 
-    const auto fastForest = fastforest::load_txt("softmax/model.txt", features);
+    const auto fastForest = fastforest::load_txt("softmax/model.txt", features, 3);
 
     std::ifstream fileX("softmax/X.csv");
     std::ifstream filePreds("softmax/preds.csv");
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(SoftmaxTest) {
         for (auto& x : input) {
             fileX >> x;
         }
-        for (auto& x : fastForest.softmax(input.data(), 3)) {
+        for (auto& x : fastForest.softmax(input.data())) {
             filePreds >> ref;
             BOOST_CHECK_CLOSE(x, ref, tolerance);
         }
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(SoftmaxNSamples100NFeatures100Test) {
         features.emplace_back(std::string("f") + std::to_string(i));
     }
 
-    const auto fastForest = fastforest::load_txt("softmax_n_samples_100_n_features_100/model.txt", features);
+    const auto fastForest = fastforest::load_txt("softmax_n_samples_100_n_features_100/model.txt", features, 3);
 
     std::ifstream fileX("softmax_n_samples_100_n_features_100/X.csv");
     std::ifstream filePreds("softmax_n_samples_100_n_features_100/preds.csv");
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(SoftmaxNSamples100NFeatures100Test) {
         for (auto& x : input) {
             fileX >> x;
         }
-        for (auto& x : fastForest.softmax(input.data(), 3)) {
+        for (auto& x : fastForest.softmax(input.data())) {
             filePreds >> ref;
             BOOST_CHECK_CLOSE(x, ref, tolerance);
         }
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(SoftmaxNSamples100NFeatures100Test) {
 BOOST_AUTO_TEST_CASE(SoftmaxArrayTest) {
     std::vector<std::string> features{"f0", "f1", "f2", "f3", "f4"};
 
-    const auto fastForest = fastforest::load_txt("softmax/model.txt", features);
+    const auto fastForest = fastforest::load_txt("softmax/model.txt", features, 3);
 
     std::ifstream fileX("softmax/X.csv");
     std::ifstream filePreds("softmax/preds.csv");
