@@ -1,7 +1,7 @@
 import treelite
 
 
-def export_treelite_model(filename, nthread):
+def export_treelite_model(filename):
 
     # From https://treelite.readthedocs.io/en/latest/
 
@@ -15,26 +15,27 @@ def export_treelite_model(filename, nthread):
 
     # Like export_srcpkg, but generates a shared library immediately
     # Use this only when the host and target machines are compatible
-    # Note: the nthread parameter seems to have no effect here. Instead, the number of threads
-    # has to be specified when creating the predictor object
-    model.export_lib(toolchain="gcc", libpath=filename + ".so", verbose=True, nthread=nthread)
+    params = {
+        "parallel_comp": 16,  # set to number of threads you want
+    }
+    model.export_lib(toolchain="gcc", libpath=filename + ".so", params=params)
 
 
-export_treelite_model("model", 1)
+export_treelite_model("model")
 
-import treelite.runtime
+import treelite_runtime
 import numpy as np
 import time
 
 # We use treelite with one thread for a fair comparison with fastforest.
-predictor = treelite.runtime.Predictor("./model.so", nthread=1, verbose=True)
+predictor = treelite_runtime.Predictor("./model.so", nthread=1, verbose=True)
 
 X = np.random.uniform(-5, 5, size=(100000, 5))
 
 start_time = time.time()
 
-batch = treelite.runtime.Batch.from_npy2d(X)
-out_pred = predictor.predict(batch)
+dmat = treelite_runtime.DMatrix(X)
+out_pred = predictor.predict(dmat)
 
 print(np.mean(out_pred))
 

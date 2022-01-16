@@ -3,6 +3,12 @@
 // as the model is compiled together with this test, please try out different optimization flags
 // and quote the best result for a fair comparison with fastforest
 
+// the model.c file assumes hardcoded feature indices
+#define f0 0
+#define f1 1
+#define f2 2
+#define f3 3
+#define f4 4
 #include "model.c"
 
 #include <cmath>
