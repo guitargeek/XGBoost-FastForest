@@ -24,8 +24,9 @@ SOFTWARE.
 
 */
 
-#include "fastforest.h"
+#include <fastforest.h>
 
+#include <cmath>
 #include <fstream>
 #include <string>
 #include <sstream>

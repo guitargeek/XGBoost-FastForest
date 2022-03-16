@@ -24,7 +24,7 @@ SOFTWARE.
 
 */
 
-#include "fastforest.h"
+#include <fastforest.h>
 #include "common_details.h"
 
 #include <fstream>

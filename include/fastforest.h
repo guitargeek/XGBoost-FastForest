@@ -27,8 +27,10 @@ SOFTWARE.
 #ifndef FastForest_h
 #define FastForest_h
 
+#if __cplusplus >= 201103L
 #include <array>
-#include <cmath>
+#endif
+
 #include <istream>
 #include <string>
 #include <vector>
@@ -62,6 +64,7 @@ namespace fastforest {
             return evaluateBinary(array, baseResponse);
         }
 
+#if __cplusplus >= 201103L
         template <int nClasses>
         std::array<TreeEnsembleResponseType, nClasses> softmax(
             const FeatureType* array, TreeEnsembleResponseType baseResponse = defaultBaseResponse) const {
@@ -72,6 +75,7 @@ namespace fastforest {
             details::softmaxTransformInplace(out.data(), nClasses);
             return out;
         }
+#endif
 
         // dynamic softmax interface with manually allocated std::vector: simple but inefficient
         std::vector<TreeEnsembleResponseType> softmax(
