@@ -30,10 +30,10 @@ SOFTWARE.
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <unordered_map>
+#include <map>
 #include <stdexcept>
-
 #include <iostream>
+#include <stdlib.h>     /* strtol */
 
 using namespace fastforest;
 
@@ -53,7 +53,11 @@ namespace {
 
         template <class NumericType>
         struct NumericAfterSubstrOutput {
-            explicit NumericAfterSubstrOutput() : value{0}, found{false}, failed{true} {}
+            explicit NumericAfterSubstrOutput() {
+                value = 0;
+                found = false;
+                failed = true;
+            }
             NumericType value;
             bool found;
             bool failed;
@@ -67,7 +71,7 @@ namespace {
             NumericAfterSubstrOutput<NumericType> output;
             output.rest = str;
 
-            auto found = str.find(substr);
+            std::size_t found = str.find(substr);
             if (found != std::string::npos) {
                 output.found = true;
                 std::stringstream ss(str.substr(found + substr.size(), str.size() - found + substr.size()));
@@ -136,7 +140,7 @@ FastForest fastforest::load_txt(std::string const& txtpath, std::vector<std::str
         throw std::runtime_error(info + "file does not exists");
     }
 
-    std::ifstream file(txtpath);
+    std::ifstream file(txtpath.c_str());
     return load_txt(file, features, nClasses);
 }
 
@@ -153,7 +157,7 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
     int treesSkipped = 0;
 
     int nVariables = 0;
-    std::unordered_map<std::string, int> varIndices;
+    std::map<std::string, int> varIndices;
     bool fixFeatures = false;
 
     if (!features.empty()) {
@@ -173,10 +177,10 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
     int nPreviousLeaves = 0;
 
     while (std::getline(file, line)) {
-        auto foundBegin = line.find("[");
-        auto foundEnd = line.find("]");
+        std::size_t foundBegin = line.find("[");
+        std::size_t foundEnd = line.find("]");
         if (foundBegin != std::string::npos) {
-            auto subline = line.substr(foundBegin + 1, foundEnd - foundBegin - 1);
+            std::string subline = line.substr(foundBegin + 1, foundEnd - foundBegin - 1);
             if (util::isInteger(subline) && !ff.responses_.empty()) {
                 terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices, treesSkipped);
             } else if (!util::isInteger(subline)) {
@@ -185,9 +189,13 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
                 ss >> index;
                 line = ss.str();
 
-                auto splitstring = util::split(subline, '<');
-                auto const& varName = splitstring[0];
-                FeatureType cutValue = std::stold(splitstring[1]);
+                std::vector<std::string> splitstring = util::split(subline, '<');
+                std::string const& varName = splitstring[0];
+                FeatureType cutValue;
+                {
+                    std::stringstream ss(splitstring[1]);
+                    ss >> cutValue;
+                }
                 if (!varIndices.count(varName)) {
                     if (fixFeatures) {
                         throw std::runtime_error(info + "feature " + varName + " not in list of features");
@@ -198,7 +206,7 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
                 }
                 int yes;
                 int no;
-                auto output = util::numericAfterSubstr<int>(line, "yes=");
+                util::NumericAfterSubstrOutput<int> output = util::numericAfterSubstr<int>(line, "yes=");
                 if (!output.failed) {
                     yes = output.value;
                 } else {
@@ -215,12 +223,12 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
                 ff.cutIndices_.push_back(varIndices[varName]);
                 ff.leftIndices_.push_back(yes);
                 ff.rightIndices_.push_back(no);
-                auto nNodeIndices = nodeIndices.size();
+                std::size_t nNodeIndices = nodeIndices.size();
                 nodeIndices[index] = nNodeIndices + nPreviousNodes;
             }
 
         } else {
-            auto output = util::numericAfterSubstr<TreeResponseType>(line, "leaf=");
+            util::NumericAfterSubstrOutput<TreeResponseType> output = util::numericAfterSubstr<TreeResponseType>(line, "leaf=");
             if (output.found) {
                 std::stringstream ss(line);
                 int index;
@@ -228,7 +236,7 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
                 line = ss.str();
 
                 ff.responses_.push_back(output.value);
-                auto nLeafIndices = leafIndices.size();
+                std::size_t nLeafIndices = leafIndices.size();
                 leafIndices[index] = nLeafIndices + nPreviousLeaves;
             }
         }
@@ -236,9 +244,9 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
     terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices, treesSkipped);
 
     if (nClasses > 2 && (ff.rootIndices_.size() + treesSkipped) % nClasses != 0) {
-        throw std::runtime_error(std::string{"Error in FastForest construction : Forest has "} +
-                                 std::to_string(ff.rootIndices_.size()) + " trees, " + "which is not compatible with " +
-                                 std::to_string(nClasses) + " classes!");
+        std::stringstream ss;
+        ss << "Error in FastForest construction : Forest has " << ff.rootIndices_.size() <<  " trees, which is not compatible with " << nClasses << "classes!";
+        throw std::runtime_error(ss.str());
     }
 
     return ff;

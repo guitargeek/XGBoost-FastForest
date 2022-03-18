@@ -45,7 +45,7 @@ void fastforest::details::softmaxTransformInplace(TreeEnsembleResponseType* out,
     }
     i = 0;
     for (; i < nOut; ++i) {
-        auto& x = out[i];
+        TreeEnsembleResponseType& x = out[i];
         x = std::exp(x - wmax);
         norm += x;
     }
@@ -57,7 +57,7 @@ void fastforest::details::softmaxTransformInplace(TreeEnsembleResponseType* out,
 
 std::vector<TreeEnsembleResponseType> fastforest::FastForest::softmax(const FeatureType* array,
                                                                       TreeEnsembleResponseType baseResponse) const {
-    auto out = std::vector<TreeEnsembleResponseType>(nClasses());
+    std::vector<TreeEnsembleResponseType> out(nClasses());
     softmax(array, out.data(), baseResponse);
     return out;
 }
@@ -85,10 +85,11 @@ void fastforest::FastForest::evaluate(const FeatureType* array,
     }
 
     int iRootIndex = 0;
-    for (int index : rootIndices_) {
+    for (std::vector<int>::const_iterator indexIter = rootIndices_.begin(); indexIter != rootIndices_.end(); ++indexIter) {
+        int index = *indexIter;
         do {
-            auto r = rightIndices_[index];
-            auto l = leftIndices_[index];
+            int r = rightIndices_[index];
+            int l = leftIndices_[index];
             index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
         } while (index > 0);
         out[treeNumbers_[iRootIndex] % nOut] += responses_[-index];
@@ -98,12 +99,13 @@ void fastforest::FastForest::evaluate(const FeatureType* array,
 
 TreeEnsembleResponseType fastforest::FastForest::evaluateBinary(const FeatureType* array,
                                                                 TreeEnsembleResponseType baseResponse) const {
-    TreeEnsembleResponseType out{baseResponse + baseResponses_[0]};
+    TreeEnsembleResponseType out = baseResponse + baseResponses_[0];
 
-    for (int index : rootIndices_) {
+    for (std::vector<int>::const_iterator indexIter = rootIndices_.begin(); indexIter != rootIndices_.end(); ++indexIter) {
+        int index = *indexIter;
         do {
-            auto r = rightIndices_[index];
-            auto l = leftIndices_[index];
+            int r = rightIndices_[index];
+            int l = leftIndices_[index];
             index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
         } while (index > 0);
         out += responses_[-index];
@@ -113,7 +115,7 @@ TreeEnsembleResponseType fastforest::FastForest::evaluateBinary(const FeatureTyp
 }
 
 FastForest fastforest::load_bin(std::string const& txtpath) {
-    std::ifstream ifs(txtpath, std::ios::binary);
+    std::ifstream ifs(txtpath.c_str(), std::ios::binary);
     return load_bin(ifs);
 }
 
@@ -153,7 +155,7 @@ FastForest fastforest::load_bin(std::istream& is) {
 }
 
 void fastforest::FastForest::write_bin(std::string const& filename) const {
-    std::ofstream os(filename, std::ios::binary);
+    std::ofstream os(filename.c_str(), std::ios::binary);
 
     int nRootNodes = rootIndices_.size();
     int nNodes = cutValues_.size();

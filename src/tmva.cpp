@@ -33,6 +33,7 @@ SOFTWARE.
 #include <sstream>
 #include <stdexcept>
 #include <streambuf>
+#include <map>
 
 namespace util {
 
@@ -295,11 +296,11 @@ namespace fastforest {
         ff.baseResponses_.resize(2);
 
         int nVariables = 0;
-        std::unordered_map<std::string, int> varIndices;
+        std::map<std::string, int> varIndices;
         bool fixFeatures = false;
 
-        std::unordered_map<int, int> nodeIndices;
-        std::unordered_map<int, int> leafIndices;
+        std::map<int, int> nodeIndices;
+        std::map<int, int> leafIndices;
 
         int nPreviousNodes = 0;
         int nPreviousLeaves = 0;

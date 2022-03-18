@@ -28,13 +28,13 @@ SOFTWARE.
 #define common_details_h
 
 #include <vector>
-#include <unordered_map>
+#include <map>
 #include <stdexcept>
 
 namespace fastforest {
     namespace detail {
 
-        typedef std::unordered_map<int, int> IndexMap;
+        typedef std::map<int, int> IndexMap;
 
         void correctIndices(std::vector<int>::iterator begin,
                             std::vector<int>::iterator end,

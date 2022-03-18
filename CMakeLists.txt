@@ -1,36 +1,18 @@
 cmake_minimum_required(VERSION 3.2)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
-
 project(fastforest)
 project(fastforest VERSION 0.2 LANGUAGES CXX)
 
-option(EXPERIMENTAL_TMVA_SUPPORT "Build the experimental TMVA support" OFF)
 if(EXPERIMENTAL_TMVA_SUPPORT)
-    set(CMAKE_CXX_STANDARD 17)
-    file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
     add_definitions(-DEXPERIMENTAL_TMVA_SUPPORT)
-else()
-    set(CMAKE_CXX_STANDARD 11)
-    file(GLOB_RECURSE SOURCE_FILES src/common_details.cpp src/fastforest_functions.cpp src/fastforest.cpp)
 endif(EXPERIMENTAL_TMVA_SUPPORT)
-unset(EXPERIMENTAL_TMVA_SUPPORT CACHE)
 
 include_directories(include)
 
 add_subdirectory (src)
 add_subdirectory (test)
 
-enable_testing ()
-add_test (NAME fastforestTest COMMAND Test WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
-
-add_library (fastforest SHARED ${SOURCE_FILES})
-
-set_target_properties(fastforest PROPERTIES VERSION ${PROJECT_VERSION})
-
-set_target_properties(fastforest PROPERTIES SOVERSION 1)
-
-set_target_properties(fastforest PROPERTIES PUBLIC_HEADER include/fastforest.h)
+unset(EXPERIMENTAL_TMVA_SUPPORT CACHE)
 
 include(GNUInstallDirs)
 install(TARGETS fastforest
