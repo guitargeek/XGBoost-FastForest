@@ -33,7 +33,7 @@ SOFTWARE.
 #include <map>
 #include <stdexcept>
 #include <iostream>
-#include <stdlib.h>     /* strtol */
+#include <stdlib.h> /* strtol */
 
 using namespace fastforest;
 
@@ -228,7 +228,8 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
             }
 
         } else {
-            util::NumericAfterSubstrOutput<TreeResponseType> output = util::numericAfterSubstr<TreeResponseType>(line, "leaf=");
+            util::NumericAfterSubstrOutput<TreeResponseType> output =
+                util::numericAfterSubstr<TreeResponseType>(line, "leaf=");
             if (output.found) {
                 std::stringstream ss(line);
                 int index;
@@ -245,7 +246,8 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
 
     if (nClasses > 2 && (ff.rootIndices_.size() + treesSkipped) % nClasses != 0) {
         std::stringstream ss;
-        ss << "Error in FastForest construction : Forest has " << ff.rootIndices_.size() <<  " trees, which is not compatible with " << nClasses << "classes!";
+        ss << "Error in FastForest construction : Forest has " << ff.rootIndices_.size()
+           << " trees, which is not compatible with " << nClasses << "classes!";
         throw std::runtime_error(ss.str());
     }
 

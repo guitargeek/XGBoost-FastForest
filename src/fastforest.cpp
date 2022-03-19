@@ -85,7 +85,8 @@ void fastforest::FastForest::evaluate(const FeatureType* array,
     }
 
     int iRootIndex = 0;
-    for (std::vector<int>::const_iterator indexIter = rootIndices_.begin(); indexIter != rootIndices_.end(); ++indexIter) {
+    for (std::vector<int>::const_iterator indexIter = rootIndices_.begin(); indexIter != rootIndices_.end();
+         ++indexIter) {
         int index = *indexIter;
         do {
             int r = rightIndices_[index];
@@ -101,7 +102,8 @@ TreeEnsembleResponseType fastforest::FastForest::evaluateBinary(const FeatureTyp
                                                                 TreeEnsembleResponseType baseResponse) const {
     TreeEnsembleResponseType out = baseResponse + baseResponses_[0];
 
-    for (std::vector<int>::const_iterator indexIter = rootIndices_.begin(); indexIter != rootIndices_.end(); ++indexIter) {
+    for (std::vector<int>::const_iterator indexIter = rootIndices_.begin(); indexIter != rootIndices_.end();
+         ++indexIter) {
         int index = *indexIter;
         do {
             int r = rightIndices_[index];

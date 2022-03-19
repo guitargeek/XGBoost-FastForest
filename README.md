@@ -13,7 +13,7 @@ The mission of this library is to be:
 * __Fast__: thanks to efficient data structures for storing the trees, this library goes easy on your CPU and memory
 * __Safe__: the FastForest objects are not mutated when used, and therefore they are an excellent choice in multithreading
   environments
-* __Portable__: FastForest has no dependency other than the C++ standard library
+* __Portable__: FastForest has no dependency other than the C++ standard library, and the mininum required C++ standard is C++98
 
 ### Installation
 

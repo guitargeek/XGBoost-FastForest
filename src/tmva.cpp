@@ -29,7 +29,6 @@ SOFTWARE.
 
 #include <fstream>
 #include <iostream>
-#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <streambuf>
@@ -57,93 +56,176 @@ std::string util::readFile(const char* filename) {
 namespace tmva {
     class XMLAttributes {
       public:
+        XMLAttributes() {
+            boostWeight_ = NULL;
+            itree_ = NULL;
+            pos_ = NULL;
+            depth_ = NULL;
+            IVar_ = NULL;
+            Cut_ = NULL;
+            res_ = NULL;
+            nType_ = NULL;
+        };
+
+        XMLAttributes(XMLAttributes const& other) {
+            boostWeight_ = NULL;
+            itree_ = NULL;
+            pos_ = NULL;
+            depth_ = NULL;
+            IVar_ = NULL;
+            Cut_ = NULL;
+            res_ = NULL;
+            nType_ = NULL;
+            *this = other;
+        };
+
+        XMLAttributes& operator=(XMLAttributes const& other) {
+            if (other.boostWeight_ != NULL) {
+                boostWeight_ = new double;
+                *boostWeight_ = *other.boostWeight_;
+            }
+            if (other.itree_ != NULL) {
+                itree_ = new int;
+                *itree_ = *other.itree_;
+            }
+            if (other.pos_ != NULL) {
+                pos_ = new char;
+                *pos_ = *other.pos_;
+            }
+            if (other.depth_ != NULL) {
+                depth_ = new int;
+                *depth_ = *other.depth_;
+            }
+            if (other.IVar_ != NULL) {
+                IVar_ = new int;
+                *IVar_ = *other.IVar_;
+            }
+            if (other.Cut_ != NULL) {
+                Cut_ = new double;
+                *Cut_ = *other.Cut_;
+            }
+            if (other.res_ != NULL) {
+                res_ = new double;
+                *res_ = *other.res_;
+            }
+            if (other.nType_ != NULL) {
+                nType_ = new int;
+                *nType_ = *other.nType_;
+            }
+            return *this;
+        }
+
+        ~XMLAttributes() { reset(); }
+
         // If we set an attribute that is already set, this will do nothing and return false.
         // Therefore an attribute has repeated and we know a new node has started.
-        bool set(std::string const& name, std::string const& value) {
+        void set(std::string const& name, std::string const& value) {
             if (name == "itree")
-                return setValue(itree_, std::stoi(value));
+                return setValue(itree_, value);
             if (name == "boostWeight")
-                return setValue(boostWeight_, std::stod(value));
+                return setValue(boostWeight_, value);
             if (name == "pos")
-                return setValue(pos_, value[0]);
+                return setValue(pos_, value.substr(0, 1));
             if (name == "depth")
-                return setValue(depth_, std::stoi(value));
+                return setValue(depth_, value);
             if (name == "IVar")
-                return setValue(IVar_, std::stoi(value));
+                return setValue(IVar_, value);
             if (name == "Cut")
-                return setValue(Cut_, std::stod(value));
+                return setValue(Cut_, value);
             if (name == "res")
-                return setValue(res_, std::stod(value));
+                return setValue(res_, value);
             if (name == "nType")
-                return setValue(nType_, std::stoi(value));
-            return true;
+                return setValue(nType_, value);
         }
 
         bool hasValue(std::string const& name) {
             if (name == "itree")
-                return itree_.has_value();
+                return itree_ != NULL;
             if (name == "boostWeight")
-                return boostWeight_.has_value();
+                return boostWeight_ != NULL;
             if (name == "pos")
-                return pos_.has_value();
+                return pos_ != NULL;
             if (name == "depth")
-                return depth_.has_value();
+                return depth_ != NULL;
             if (name == "IVar")
-                return IVar_.has_value();
+                return IVar_ != NULL;
             if (name == "Cut")
-                return Cut_.has_value();
+                return Cut_ != NULL;
             if (name == "res")
-                return res_.has_value();
+                return res_ != NULL;
             if (name == "nType")
-                return nType_.has_value();
+                return nType_ != NULL;
             return false;
         }
 
-        auto const& itree() const { return itree_; };
-        auto const& boostWeight() const { return boostWeight_; };
-        auto const& pos() const { return pos_; };
-        auto const& depth() const { return depth_; };
-        auto const& IVar() const { return IVar_; };
-        auto const& Cut() const { return Cut_; };
-        auto const& res() const { return res_; };
-        auto const& nType() const { return nType_; };
+        int const* itree() const { return itree_; };
+        double const* boostWeight() const { return boostWeight_; };
+        char const* pos() const { return pos_; };
+        int const* depth() const { return depth_; };
+        int const* IVar() const { return IVar_; };
+        double const* Cut() const { return Cut_; };
+        double const* res() const { return res_; };
+        int const* nType() const { return nType_; };
 
         void reset() {
-            boostWeight_.reset();
-            itree_.reset();
-            pos_.reset();
-            depth_.reset();
-            IVar_.reset();
-            Cut_.reset();
-            res_.reset();
-            nType_.reset();
+            if (boostWeight_ != NULL) {
+                delete boostWeight_;
+                boostWeight_ = NULL;
+            }
+            if (itree_ != NULL) {
+                delete itree_;
+                itree_ = NULL;
+            }
+            if (pos_ != NULL) {
+                delete pos_;
+                pos_ = NULL;
+            }
+            if (depth_ != NULL) {
+                delete depth_;
+                depth_ = NULL;
+            }
+            if (IVar_ != NULL) {
+                delete IVar_;
+                IVar_ = NULL;
+            }
+            if (Cut_ != NULL) {
+                delete Cut_;
+                Cut_ = NULL;
+            }
+            if (res_ != NULL) {
+                delete res_;
+                res_ = NULL;
+            }
+            if (nType_ != NULL) {
+                delete nType_;
+                nType_ = NULL;
+            }
         }
 
       private:
         template <class T>
-        bool setValue(std::optional<T>& member, T const& value) {
-            if (member.has_value()) {
-                member = value;
-                return false;
+        void setValue(T*& member, std::string const& value) {
+            if (!member) {
+                member = new T;
             }
-            member = value;
-            return true;
+            std::stringstream ss(value);
+            ss >> *member;
         }
 
         // from the tree root node node
-        std::optional<double> boostWeight_ = std::nullopt;
-        std::optional<int> itree_ = std::nullopt;
-        std::optional<char> pos_ = std::nullopt;
-        std::optional<int> depth_ = std::nullopt;
-        std::optional<int> IVar_ = std::nullopt;
-        std::optional<double> Cut_ = std::nullopt;
-        std::optional<double> res_ = std::nullopt;
-        std::optional<int> nType_ = std::nullopt;
+        double* boostWeight_;
+        int* itree_;
+        char* pos_;
+        int* depth_;
+        int* IVar_;
+        double* Cut_;
+        double* res_;
+        int* nType_;
     };
 
     struct BDTWithXMLAttributes {
         std::vector<double> boostWeights;
-        std::vector<std::vector<XMLAttributes>> nodes;
+        std::vector<std::vector<XMLAttributes> > nodes;
     };
 
     BDTWithXMLAttributes readXMLFile(std::string const& filename);
@@ -158,12 +240,12 @@ namespace tmva {
 
         BDTWithXMLAttributes bdtXmlAttributes;
 
-        std::vector<XMLAttributes>* currentTree = nullptr;
+        std::vector<XMLAttributes>* currentTree = NULL;
 
-        XMLAttributes* attrs = nullptr;
+        XMLAttributes* attrs = NULL;
 
         while ((pos1 = str.find('=', pos1)) != std::string::npos) {
-            auto pos2 = str.rfind(' ', pos1) + 1;
+            std::size_t pos2 = str.rfind(' ', pos1) + 1;
 
             name = str.substr(pos2, pos1 - pos2);
 
@@ -173,13 +255,14 @@ namespace tmva {
             value = str.substr(pos2, pos1 - pos2);
 
             if (name == "boostWeight") {
-                bdtXmlAttributes.boostWeights.push_back(std::stod(value));
+                bdtXmlAttributes.boostWeights.push_back(0.0);
+                std::stringstream(value) >> bdtXmlAttributes.boostWeights.back();
             }
 
             if (name == "itree") {
-                bdtXmlAttributes.nodes.emplace_back();
+                bdtXmlAttributes.nodes.push_back(std::vector<tmva::XMLAttributes>());
                 currentTree = &bdtXmlAttributes.nodes.back();
-                currentTree->emplace_back();
+                currentTree->push_back(tmva::XMLAttributes());
                 attrs = &currentTree->back();
             }
 
@@ -187,7 +270,7 @@ namespace tmva {
                 continue;
 
             if (attrs->hasValue(name)) {
-                currentTree->emplace_back();
+                currentTree->push_back(tmva::XMLAttributes());
                 attrs = &currentTree->back();
             }
 
@@ -208,15 +291,26 @@ using namespace fastforest;
 namespace {
 
     struct SlowTreeNode {
-        bool isLeaf = false;
-        int depth = -1;
-        int index = -1;
-        int yes = -1;
-        int no = -1;
-        int missing = -1;
-        int cutIndex = -1;
-        double cutValue = 0.0;
-        double leafValue = 0.0;
+        SlowTreeNode() {
+            isLeaf = false;
+            depth = -1;
+            index = -1;
+            yes = -1;
+            no = -1;
+            missing = -1;
+            cutIndex = -1;
+            cutValue = 0.0;
+            leafValue = 0.0;
+        }
+        bool isLeaf;
+        int depth;
+        int index;
+        int yes;
+        int no;
+        int missing;
+        int cutIndex;
+        double cutValue;
+        double leafValue;
     };
 
     std::vector<SlowTreeNode> getSlowTreeNodes(std::vector<tmva::XMLAttributes> const& nodes) {
@@ -225,8 +319,8 @@ namespace {
         int xgbIndex = 0;
         for (int depth = 0; xgbIndex != nodes.size(); ++depth) {
             int iNode = 0;
-            for (auto const& node : nodes) {
-                if (node.depth() == depth) {
+            for (std::vector<tmva::XMLAttributes>::const_iterator node = nodes.begin(); node != nodes.end(); ++node) {
+                if (*node->depth() == depth) {
                     xgbNodes[iNode].index = xgbIndex;
                     ++xgbIndex;
                 }
@@ -235,13 +329,13 @@ namespace {
         }
 
         int iNode = 0;
-        for (auto const& node : nodes) {
-            auto& xgbNode = xgbNodes[iNode];
-            xgbNode.isLeaf = *node.nType() != 0;
-            xgbNode.depth = *node.depth();
-            xgbNode.cutIndex = *node.IVar();
-            xgbNode.cutValue = *node.Cut();
-            xgbNode.leafValue = *node.res();
+        for (std::vector<tmva::XMLAttributes>::const_iterator node = nodes.begin(); node != nodes.end(); ++node) {
+            SlowTreeNode& xgbNode = xgbNodes[iNode];
+            xgbNode.isLeaf = *node->nType() != 0;
+            xgbNode.depth = *node->depth();
+            xgbNode.cutIndex = *node->IVar();
+            xgbNode.cutValue = *node->Cut();
+            xgbNode.leafValue = *node->res();
             if (!xgbNode.isLeaf) {
                 xgbNode.yes = xgbNodes[iNode + 1].index;
                 xgbNode.no = xgbNode.yes + 1;
@@ -253,8 +347,8 @@ namespace {
         return xgbNodes;
     }
 
-    using SlowTree = std::vector<SlowTreeNode>;
-    using SlowForest = std::vector<SlowTree>;
+    typedef std::vector<SlowTreeNode> SlowTree;
+    typedef std::vector<SlowTree> SlowForest;
 
     std::ostream& operator<<(std::ostream& os, SlowTreeNode const& node) {
         for (int i = 0; i < node.depth; ++i) {
@@ -270,18 +364,18 @@ namespace {
     }
 
     std::ostream& operator<<(std::ostream& os, SlowTree const& nodes) {
-        for (auto const& node : nodes) {
-            os << node << "\n";
+        for (SlowTree::const_iterator node = nodes.begin(); node != nodes.end(); ++node) {
+            os << *node << "\n";
         }
         return os;
     }
 
     std::ostream& operator<<(std::ostream& os, SlowForest const& forest) {
         int iTree = 0;
-        for (auto const& tree : forest) {
+        for (SlowForest::const_iterator tree = forest.begin(); tree != forest.end(); ++tree) {
             os << "booster[" << iTree << "]:"
                << "\n";
-            os << tree;
+            os << *tree;
             ++iTree;
         }
         return os;
@@ -305,7 +399,7 @@ namespace fastforest {
         int nPreviousNodes = 0;
         int nPreviousLeaves = 0;
 
-        for (auto const& tree : xgb) {
+        for (SlowForest::const_iterator tree = xgb.begin(); tree != xgb.end(); ++tree) {
             detail::correctIndices(
                 ff.rightIndices_.begin() + nPreviousNodes, ff.rightIndices_.end(), nodeIndices, leafIndices);
             detail::correctIndices(
@@ -315,16 +409,16 @@ namespace fastforest {
             nPreviousNodes = ff.cutValues_.size();
             nPreviousLeaves = ff.responses_.size();
             ff.rootIndices_.push_back(nPreviousNodes);
-            for (auto const& node : tree) {
-                if (node.isLeaf) {
-                    ff.responses_.push_back(node.leafValue);
-                    leafIndices[node.index] = leafIndices.size() + nPreviousLeaves;
+            for (SlowTree::const_iterator node = tree->begin(); node != tree->end(); ++node) {
+                if (node->isLeaf) {
+                    ff.responses_.push_back(node->leafValue);
+                    leafIndices[node->index] = leafIndices.size() + nPreviousLeaves;
                 } else {
-                    ff.cutValues_.push_back(node.cutValue);
-                    ff.cutIndices_.push_back(node.cutIndex);
-                    ff.leftIndices_.push_back(node.yes);
-                    ff.rightIndices_.push_back(node.no);
-                    nodeIndices[node.index] = nodeIndices.size() + nPreviousNodes;
+                    ff.cutValues_.push_back(node->cutValue);
+                    ff.cutIndices_.push_back(node->cutIndex);
+                    ff.leftIndices_.push_back(node->yes);
+                    ff.rightIndices_.push_back(node->no);
+                    nodeIndices[node->index] = nodeIndices.size() + nPreviousNodes;
                 }
             }
         }
@@ -339,9 +433,11 @@ namespace fastforest {
 
     FastForest load_tmva_xml(std::string const& xmlpath, std::vector<std::string>& features) {
         tmva::BDTWithXMLAttributes tmvaXML = tmva::readXMLFile(xmlpath);
-        std::vector<std::vector<SlowTreeNode>> xgboostForest;
-        for (auto const& tree : tmvaXML.nodes) {
-            xgboostForest.push_back(getSlowTreeNodes(tree));
+        std::vector<std::vector<SlowTreeNode> > xgboostForest;
+        for (std::vector<std::vector<tmva::XMLAttributes> >::const_iterator tree = tmvaXML.nodes.begin();
+             tree != tmvaXML.nodes.end();
+             ++tree) {
+            xgboostForest.push_back(getSlowTreeNodes(*tree));
         }
         return fastforest::load_slowforest(xgboostForest, features);
     }
