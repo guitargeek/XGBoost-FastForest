@@ -1,7 +1,5 @@
-set(CMAKE_CXX_STANDARD 98)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -pedantic-errors")
 
-option(EXPERIMENTAL_TMVA_SUPPORT "Build the experimental TMVA support" OFF)
 if(EXPERIMENTAL_TMVA_SUPPORT)
     file(GLOB_RECURSE SOURCE_FILES "*.cpp")
 else()

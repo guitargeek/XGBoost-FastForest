@@ -42,4 +42,5 @@ script:
   - cmake -DEXPERIMENTAL_TMVA_SUPPORT:bool=true ..
   - make
   - sudo make install
-  - env CTEST_OUTPUT_ON_FAILURE=1 make test
+  - cd ../test
+  - ../build/test/Test
