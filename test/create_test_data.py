@@ -60,10 +60,10 @@ create_test_data(df.values, y, "manyfeatures")
 X, y = make_classification(
     n_samples=10000, n_features=5, n_informative=3, random_state=42, n_classes=3, weights=[0.33, 0.33]
 )
-create_test_data(X, y, "softmax", objective="multi:softmax", eval_metric="mlogloss")
+create_test_data(X, y, "softmax", objective="multi:softproba", eval_metric="mlogloss")
 
 # for GitHub issue #15
 X, y = make_classification(
     n_samples=100, n_features=100, n_informative=3, random_state=42, n_classes=3, weights=[0.33, 0.33]
 )
-create_test_data(X, y, "softmax_n_samples_100_n_features_100", objective="multi:softmax", eval_metric="mlogloss")
+create_test_data(X, y, "softmax_n_samples_100_n_features_100", objective="multi:softproba", eval_metric="mlogloss")

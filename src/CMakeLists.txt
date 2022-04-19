@@ -12,4 +12,8 @@ set_target_properties(fastforest PROPERTIES VERSION ${PROJECT_VERSION})
 
 set_target_properties(fastforest PROPERTIES SOVERSION 1)
 
-set_target_properties(fastforest PROPERTIES PUBLIC_HEADER include/fastforest.h)
+set_target_properties(fastforest PROPERTIES PUBLIC_HEADER ../include/fastforest.h)
+
+install(TARGETS fastforest
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
