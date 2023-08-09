@@ -1,0 +1,32 @@
+name: FastForest CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  ci:
+
+    name: Run CI
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Python packages
+      run: python3 -m pip install scikit-learn xgboost pandas numpy
+    - name: Build
+      run: "mkdir build &&
+            cd build &&
+            cmake -DEXPERIMENTAL_TMVA_SUPPORT:bool=true .. &&
+            make &&
+            sudo make install"
+    - name: Prepare test data
+      run: "ln -s $PWD/benchmark/xgboost2tmva.py $PWD/test/xgboost2tmva.py &&
+            cd test &&
+            python3 create_test_data.py"
+    - name: Run tests
+      run: "cd test &&
+            ../build/test/fastforest-tests"
