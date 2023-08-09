@@ -1,5 +1,7 @@
 #include <fastforest.h>
 
+#include <gtest/gtest.h>
+
 #include <fstream>
 #include <iostream>
 #include <cmath>
@@ -10,9 +12,7 @@ const std::size_t nSamples = 100;
 typedef float RefPredictionType;
 typedef fastforest::FastForest FF;
 
-#define CHECK_CLOSE(val, ref, tol)         \
-    if (std::abs((val - ref) / ref) > tol) \
-        return 1;
+#define CHECK_CLOSE(val, ref, tol) EXPECT_LT(std::abs((val - ref) / ref), tol)
 
 void fillFeaturesFive(std::vector<std::string>& features) {
     features.reserve(5);
@@ -23,7 +23,7 @@ void fillFeaturesFive(std::vector<std::string>& features) {
     features.push_back("f4");
 }
 
-int exampleTest() {
+TEST(FastForest, Example) {
     std::vector<std::string> features;
     fillFeaturesFive(features);
 
@@ -39,11 +39,9 @@ int exampleTest() {
 
     fastforest::FeatureType score = fastForest(input.data());
     fastforest::FeatureType logistcScore = 1. / (1. + std::exp(-score));
-
-    return 0;
 }
 
-int basicTest() {
+TEST(FastForest, Basic) {
     std::vector<std::string> features;
     fillFeaturesFive(features);
 
@@ -65,11 +63,9 @@ int basicTest() {
 
         CHECK_CLOSE(score, ref, tolerance);
     }
-
-    return 0;
 }
 
-int softmaxTest() {
+TEST(FastForest, Softmax) {
     std::vector<std::string> features;
     fillFeaturesFive(features);
 
@@ -92,12 +88,10 @@ int softmaxTest() {
             CHECK_CLOSE(output[j], ref, tolerance);
         }
     }
-
-    return 0;
 }
 
 // This test covers the case of trees with a single leaf node.
-int softmaxNSamples100NFeatures100Test() {
+TEST(FastForest, SoftmaxNSamples100NFeatures100) {
     std::vector<std::string> features;
     for (std::size_t i = 0; i < 100; ++i) {
         std::stringstream ss;
@@ -124,13 +118,11 @@ int softmaxNSamples100NFeatures100Test() {
             CHECK_CLOSE(output[j], ref, tolerance);
         }
     }
-
-    return 0;
 }
 
 #if __cplusplus >= 201103L
 
-int softmaxArrayTest() {
+TEST(FastForest, SoftmaxArray) {
     std::vector<std::string> features;
     fillFeaturesFive(features);
 
@@ -152,13 +144,11 @@ int softmaxArrayTest() {
             CHECK_CLOSE(x, ref, tolerance);
         }
     }
-
-    return 0;
 }
 
 #endif
 
-int serializationTest() {
+TEST(FastForest, Serialization) {
     {
         std::vector<std::string> features;
         fillFeaturesFive(features);
@@ -184,11 +174,9 @@ int serializationTest() {
 
         CHECK_CLOSE(score, ref, tolerance);
     }
-
-    return 0;
 }
 
-int discreteTest() {
+TEST(FastForest, Discrete) {
     std::vector<std::string> features;
     fillFeaturesFive(features);
 
@@ -210,11 +198,9 @@ int discreteTest() {
 
         CHECK_CLOSE(score, ref, tolerance);
     }
-
-    return 0;
 }
 
-int manyfeaturesTest() {
+TEST(FastForest, ManyFeatures) {
     std::vector<std::string> features;
     for (int i = 0; i < 311; ++i) {
         std::stringstream ss;
@@ -240,13 +226,11 @@ int manyfeaturesTest() {
 
         CHECK_CLOSE(score, ref, tolerance);
     }
-
-    return 0;
 }
 
 #ifdef EXPERIMENTAL_TMVA_SUPPORT
 
-int basicTMVAXMLTest() {
+TEST(FastForest, BasicTMVAXML) {
     std::vector<std::string> features;
     fillFeaturesFive(features);
 
@@ -268,34 +252,6 @@ int basicTMVAXMLTest() {
 
         CHECK_CLOSE(score, ref, tolerance);
     }
-
-    return 0;
 }
 
 #endif
-
-int main() {
-    int ret = 0;
-
-    ret += exampleTest();
-    ret += basicTest();
-    ret += softmaxTest();
-    ret += softmaxNSamples100NFeatures100Test();
-#if __cplusplus >= 201103L
-    ret += softmaxArrayTest();
-#endif
-    ret += serializationTest();
-    ret += discreteTest();
-    ret += manyfeaturesTest();
-#ifdef EXPERIMENTAL_TMVA_SUPPORT
-    ret += basicTMVAXMLTest();
-#endif
-
-    if (ret == 0) {
-        std::cout << "Tests PASSED" << std::endl;
-    } else {
-        std::cout << "Tests FAILED" << std::endl;
-    }
-
-    return ret != 0;
-}

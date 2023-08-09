@@ -15,9 +15,7 @@ def create_test_data(X, y, directory, n_dump_samples=100, objective="binary:logi
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    model = XGBClassifier(
-        n_estimators=100, max_depth=7, objective=objective, eval_metric=eval_metric, use_label_encoder=False
-    ).fit(X, y)
+    model = XGBClassifier(n_estimators=100, max_depth=7, objective=objective, eval_metric=eval_metric).fit(X, y)
 
     model._Booster.dump_model(os.path.join(directory, "model.txt"))
     model._Booster.save_model(os.path.join(directory, "model.bin"))
