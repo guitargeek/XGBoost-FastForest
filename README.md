@@ -2,7 +2,7 @@
 
 Minimal library code to deploy [XGBoost](https://xgboost.readthedocs.io/en/latest/) models in C++.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4109412.svg)](https://doi.org/10.5281/zenodo.4109412)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8400945.svg)](https://doi.org/10.5281/zenodo.8400945)
 
 In science, it is very common to prototype algorithms with Python and then put them in production with fast C++ code.
 Transitioning models from Python to C++ should be as easy as possible to make sure new ideas can be tried out rapidly.
