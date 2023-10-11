@@ -91,7 +91,7 @@ void fastforest::FastForest::evaluate(const FeatureType* array,
         do {
             int r = rightIndices_[index];
             int l = leftIndices_[index];
-            index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
+            index = array[cutIndices_[index]] < cutValues_[index] ? l : r;
         } while (index > 0);
         out[treeNumbers_[iRootIndex] % nOut] += responses_[-index];
         ++iRootIndex;
@@ -108,7 +108,7 @@ TreeEnsembleResponseType fastforest::FastForest::evaluateBinary(const FeatureTyp
         do {
             int r = rightIndices_[index];
             int l = leftIndices_[index];
-            index = array[cutIndices_[index]] > cutValues_[index] ? r : l;
+            index = array[cutIndices_[index]] < cutValues_[index] ? l : r;
         } while (index > 0);
         out += responses_[-index];
     }
