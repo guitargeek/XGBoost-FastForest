@@ -18,7 +18,6 @@ def create_test_data(X, y, directory, n_dump_samples=100, objective="binary:logi
     model = XGBClassifier(n_estimators=100, max_depth=7, objective=objective, eval_metric=eval_metric).fit(X, y)
 
     model._Booster.dump_model(os.path.join(directory, "model.txt"))
-    model._Booster.save_model(os.path.join(directory, "model.bin"))
     feature_names = [("f" + str(i), "F") for i in range(len(y))]
     xgboost2tmva.convert_model(model._Booster.get_dump(), feature_names, os.path.join(directory, "model.xml"))
 

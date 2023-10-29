@@ -44,7 +44,6 @@ model = XGBClassifier().fit(X, y)
 booster = model._Booster
 
 booster.dump_model("model.txt")
-booster.save_model("model.bin")
 ```
 
 In C++, you can now quickly load the model into a `FastForest` and obtain predictions by calling the FastForest object with an array of features.
