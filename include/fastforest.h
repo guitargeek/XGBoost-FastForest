@@ -50,7 +50,7 @@ namespace fastforest {
     // The base response you have to use with older XGBoost versions might be
     // zero, so try to explicitely pass zero to the model evaluation if the
     // results from this library are incorrect.
-    const TreeEnsembleResponseType defaultBaseResponse = 0.5;
+    const TreeEnsembleResponseType defaultBaseResponse = 0.0;
 
     namespace details {
 
