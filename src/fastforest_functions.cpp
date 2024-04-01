@@ -84,14 +84,14 @@ namespace {
             return output;
         }
 
-        std::vector<std::string> split(std::string const& strToSplit, char delimeter) {
+        std::vector<std::string> split(std::string const& strToSplit, char delimiter) {
             std::stringstream ss(strToSplit);
             std::string item;
-            std::vector<std::string> splittedStrings;
-            while (std::getline(ss, item, delimeter)) {
-                splittedStrings.push_back(item);
+            std::vector<std::string> splitStrings;
+            while (std::getline(ss, item, delimiter)) {
+                splitStrings.push_back(item);
             }
-            return splittedStrings;
+            return splitStrings;
         }
 
         bool exists(std::string const& filename) {

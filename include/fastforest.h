@@ -48,7 +48,7 @@ namespace fastforest {
     typedef unsigned int CutIndexType;
 
     // The base response you have to use with older XGBoost versions might be
-    // zero, so try to explicitely pass zero to the model evaluation if the
+    // zero, so try to explicitly pass zero to the model evaluation if the
     // results from this library are incorrect.
     const TreeEnsembleResponseType defaultBaseResponse = 0.0;
 

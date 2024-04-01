@@ -35,7 +35,7 @@ SOFTWARE.
 using namespace fastforest;
 
 void fastforest::details::softmaxTransformInplace(TreeEnsembleResponseType* out, int nOut) {
-    // Do softmax transformation inplace, mimicing exactly the Softmax function
+    // Do softmax transformation inplace, mimicking exactly the Softmax function
     // in the src/common/math.h source file of xgboost.
     double norm = 0.;
     TreeEnsembleResponseType wmax = *out;
@@ -68,7 +68,7 @@ void fastforest::FastForest::softmax(const FeatureType* array,
     int nClass = nClasses();
     if (nClass <= 2) {
         throw std::runtime_error(
-            "Error in FastForest::softmax : binary classification models don't support softmax evaluation. Plase set "
+            "Error in FastForest::softmax : binary classification models don't support softmax evaluation. Please set "
             "the number of classes in the FastForest-creating function if this is a multiclassification model.");
     }
 

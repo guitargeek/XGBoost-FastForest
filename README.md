@@ -13,7 +13,7 @@ The mission of this library is to be:
 * __Fast__: thanks to efficient data structures for storing the trees, this library goes easy on your CPU and memory
 * __Safe__: the FastForest objects are not mutated when used, and therefore they are an excellent choice in multithreading
   environments
-* __Portable__: FastForest has no dependency other than the C++ standard library, and the mininum required C++ standard is C++98
+* __Portable__: FastForest has no dependency other than the C++ standard library, and the minimum required C++ standard is C++98
 
 ### Installation
 
@@ -73,11 +73,35 @@ Some things to keep in mind:
   * If you train with the `objective='binary:logitraw'`
     parameter, the output you'll get from `predict_proba()` will be without the logistic transformation, just like from the FastForest.
 
+### Models with non-zero base response
+
+If you still see a mismatch of xgboost and FastForest output even with the logistric transformation, your xgboost model probably has a base score that is not equal to 0.5. You can inspect the base score of an XGBClassifier as follows:
+
+```Python
+def get_basescore(model: xgb.XGBModel) -> float:
+    import json
+
+    """Get base score from an XGBoost sklearn estimator."""
+    base_score = float(json.loads(model.get_booster().save_config())["learner"]["learner_model_param"]["base_score"])
+    return base_score
+
+print(get_basescore(model)) # usually 0.5
+```
+If the base score is not 0.5, note it down, apply the inverse logistic transformation, and use it as the base response parameter for the FastForest evaluation:
+```C++
+float base_score = /* the output of get_basescore from Python */;
+float base_response = std::log(base_score / (1.0 - base_score));
+float score = 1./(1. + std::exp(-fastForest(input.data(), base_score)));
+```
+Unfortunately, the base score is not saved in the `.txt` dump of XGBoost, which is why this manual procedure is necessary.
+
+In the future, FastForest might migrate to XGBoosts `.json` format for the model input, since this schema encodes the base score.
+
 ### Multiclass classification with softmax
 
 It is easily possible to use multiclassification models trained with the `multi:softmax` objective.
 
-In this case, you should pass the number of classes fo `fastforest::load_txt` and use the `FastForest::softmax` function for evaluation.
+In this case, you should pass the number of classes to `fastforest::load_txt` and use the `FastForest::softmax` function for evaluation.
 
 The function will return you a vector with the probabilities, one entry for each class.
 
