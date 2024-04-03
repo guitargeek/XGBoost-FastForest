@@ -18,7 +18,7 @@ The mission of this library is to be:
 ### Installation
 
 You can clone this repository, compile and install the library with __cmake__:
-```
+```Bash
 git clone git@github.com:guitargeek/FastForest.git
 mkdir build
 cd build
@@ -91,7 +91,7 @@ If the base score is not 0.5, note it down, apply the inverse logistic transform
 ```C++
 float base_score = /* the output of get_basescore from Python */;
 float base_response = std::log(base_score / (1.0 - base_score));
-float score = 1./(1. + std::exp(-fastForest(input.data(), base_score)));
+float score = 1./(1. + std::exp(-fastForest(input.data(), base_response)));
 ```
 Unfortunately, the base score is not saved in the `.txt` dump of XGBoost, which is why this manual procedure is necessary.
 
