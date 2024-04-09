@@ -34,10 +34,15 @@ void fastforest::detail::correctIndices(std::vector<int>::iterator begin,
                                         fastforest::detail::IndexMap const& nodeIndices,
                                         fastforest::detail::IndexMap const& leafIndices) {
     for (std::vector<int>::iterator it = begin; it != end; ++it) {
-        if (nodeIndices.count(*it)) {
-            *it = nodeIndices.at(*it);
-        } else if (leafIndices.count(*it)) {
-            *it = -leafIndices.at(*it);
+        IndexMap::const_iterator foundNode = nodeIndices.find(*it);
+        if (foundNode != nodeIndices.end()) {
+            *it = foundNode->second;
+            continue;
+        }
+        IndexMap::const_iterator foundLeaf = leafIndices.find(*it);
+        if (foundLeaf != leafIndices.end()) {
+            *it = -foundLeaf->second;
+            continue;
         } else {
             throw std::runtime_error("something is wrong in the node structure");
         }
