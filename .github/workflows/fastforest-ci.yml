@@ -39,7 +39,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DEXPERIMENTAL_TMVA_SUPPORT:bool=true -DCMAKE_INSTALL_PREFIX=../install ..
+          cmake -DEXPERIMENTAL_TMVA_SUPPORT:bool=OFF -DCMAKE_INSTALL_PREFIX=../install ..
           cmake --build . --target install -j2
 
       - name: Prepare test data
