@@ -34,16 +34,24 @@ In the end, we save the model both in __binary format__ to be able to still read
 format__ so we can open it with FastForest.
 
 ```Python
+import xgboost
 from xgboost import XGBClassifier
 from sklearn.datasets import make_classification
 import numpy as np
 
-X, y = make_classification(n_samples=10000, n_features=5, random_state=42, n_classes=2, weights=[0.5])
+X, y = make_classification(
+    n_samples=10000, n_features=5, random_state=42, n_classes=2, weights=[0.5]
+)
 
 model = XGBClassifier().fit(X, y)
-booster = model._Booster
 
-booster.dump_model("model.txt")
+outfile = "model.txt"
+# Dump the model to a .txt file
+model._Booster.dump_model(outfile, fmap="", with_stats=False, dump_format="text")
+# Append the XGBoost version, required for correct parsing because of XGBoost
+#  version differences.
+with open(outfile, "a") as f:
+    f.write(f"xgboost_version={xgboost.__version__}\n")
 ```
 
 In C++, you can now quickly load the model into a `FastForest` and obtain predictions by calling the FastForest object with an array of features.

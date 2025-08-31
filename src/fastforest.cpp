@@ -55,16 +55,13 @@ void fastforest::details::softmaxTransformInplace(TreeEnsembleResponseType* out,
     }
 }
 
-std::vector<TreeEnsembleResponseType> fastforest::FastForest::softmax(const FeatureType* array,
-                                                                      TreeEnsembleResponseType baseResponse) const {
+std::vector<TreeEnsembleResponseType> fastforest::FastForest::softmax(const FeatureType* array) const {
     std::vector<TreeEnsembleResponseType> out(nClasses());
-    softmax(array, out.data(), baseResponse);
+    softmax(array, out.data());
     return out;
 }
 
-void fastforest::FastForest::softmax(const FeatureType* array,
-                                     TreeEnsembleResponseType* out,
-                                     TreeEnsembleResponseType baseResponse) const {
+void fastforest::FastForest::softmax(const FeatureType* array, TreeEnsembleResponseType* out) const {
     int nClass = nClasses();
     if (nClass <= 2) {
         throw std::runtime_error(
@@ -72,16 +69,13 @@ void fastforest::FastForest::softmax(const FeatureType* array,
             "the number of classes in the FastForest-creating function if this is a multiclassification model.");
     }
 
-    evaluate(array, out, nClass, baseResponse);
+    evaluate(array, out, nClass);
     fastforest::details::softmaxTransformInplace(out, nClass);
 }
 
-void fastforest::FastForest::evaluate(const FeatureType* array,
-                                      TreeEnsembleResponseType* out,
-                                      int nOut,
-                                      TreeEnsembleResponseType baseResponse) const {
+void fastforest::FastForest::evaluate(const FeatureType* array, TreeEnsembleResponseType* out, int nOut) const {
     for (int i = 0; i < nOut; ++i) {
-        out[i] = baseResponse + baseResponses_[i];
+        out[i] = baseResponses_[i];
     }
 
     int iRootIndex = 0;
@@ -98,9 +92,8 @@ void fastforest::FastForest::evaluate(const FeatureType* array,
     }
 }
 
-TreeEnsembleResponseType fastforest::FastForest::evaluateBinary(const FeatureType* array,
-                                                                TreeEnsembleResponseType baseResponse) const {
-    TreeEnsembleResponseType out = baseResponse + baseResponses_[0];
+TreeEnsembleResponseType fastforest::FastForest::evaluateBinary(const FeatureType* array) const {
+    TreeEnsembleResponseType out = baseResponses_[0];
 
     for (std::vector<int>::const_iterator indexIter = rootIndices_.begin(); indexIter != rootIndices_.end();
          ++indexIter) {
