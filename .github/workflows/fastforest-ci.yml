@@ -8,25 +8,47 @@ on:
 
 jobs:
   ci:
+    name: Run CI (xgboost ${{ matrix.deps.xgboost }})
+    runs-on: ubuntu-22.04
 
-    name: Run CI
-
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        deps:
+          - { xgboost: "1.5.2", numpy: "<2.0" }
+          - { xgboost: "1.6.2", numpy: "<3.0" }
+          - { xgboost: "1.7.6", numpy: "<3.0" }
+          - { xgboost: "2.0.3", numpy: "<3.0" }
+          - { xgboost: "2.1.4", numpy: "<3.0" }
+          - { xgboost: "3.0.4", numpy: "<3.0" }
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Install Python packages
-      run: python3 -m pip install scikit-learn xgboost pandas numpy
-    - name: Build
-      run: "mkdir build &&
-            cd build &&
-            cmake -DEXPERIMENTAL_TMVA_SUPPORT:bool=true .. &&
-            make &&
-            sudo make install"
-    - name: Prepare test data
-      run: "ln -s $PWD/benchmark/xgboost2tmva.py $PWD/test/xgboost2tmva.py &&
-            cd test &&
-            python3 create_test_data.py"
-    - name: Run tests
-      run: "cd test &&
-            ../build/test/fastforest-tests"
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install scikit-learn "xgboost==${{ matrix.deps.xgboost }}" pandas "numpy${{ matrix.deps.numpy }}"
+
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake -DEXPERIMENTAL_TMVA_SUPPORT:bool=true -DCMAKE_INSTALL_PREFIX=../install ..
+          cmake --build . --target install -j2
+
+      - name: Prepare test data
+        run: |
+          ln -s $PWD/benchmark/xgboost2tmva.py $PWD/test/xgboost2tmva.py
+          cd test
+          python create_test_data.py
+
+      - name: Run tests
+        run: |
+          cd test
+          ../build/test/fastforest-tests
