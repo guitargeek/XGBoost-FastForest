@@ -1,3 +1,4 @@
+import xgboost
 from xgboost import XGBClassifier
 from sklearn.datasets import make_classification
 
@@ -17,8 +18,14 @@ def create_test_data(X, y, directory, n_dump_samples=100, objective="binary:logi
 
     model = XGBClassifier(n_estimators=100, max_depth=7, objective=objective, eval_metric=eval_metric).fit(X, y)
 
-    model._Booster.dump_model(os.path.join(directory, "model.txt"))
-    feature_names = [("f" + str(i), "F") for i in range(len(y))]
+    outpath = os.path.join(directory, "model.txt")
+    # Dump the model to a .txt file
+    model._Booster.dump_model(outpath, fmap="", with_stats=False, dump_format="text")
+    # Append the XGBoost version
+    with open(outpath, "a") as f:
+        f.write(f"xgboost_version={xgboost.__version__}\n")
+
+    feature_names = [(f"f{i}", "F") for i in range(len(y))]
     xgboost2tmva.convert_model(model._Booster.get_dump(), feature_names, os.path.join(directory, "model.xml"))
 
     X_dump = X[:n_dump_samples]
@@ -32,35 +39,42 @@ def create_test_data(X, y, directory, n_dump_samples=100, objective="binary:logi
     pd.DataFrame(preds_dump).to_csv(os.path.join(directory, "preds.csv"), **csv_args)
 
 
-n_features = 5
-X, y = make_classification(n_samples=10000, n_features=n_features, random_state=42, n_classes=2, weights=[0.5])
+def main():
 
-create_test_data(X, y, "continuous")
+    n_features = 5
+    X, y = make_classification(n_samples=10000, n_features=n_features, random_state=42, n_classes=2, weights=[0.5])
 
-X_discrete = np.array(X, dtype=int) * 2
+    create_test_data(X, y, "continuous")
 
-create_test_data(X_discrete, y, "discrete")
-# Why do we add +1 here? It's to cover the test case where integer features lie exactly on the cut values.
-# For this trainings test, the features will all be even numbers to the cut values will be odd numbers.
-# Therefore, we can add +1 to the features to get odd numbers as well and cover the test case of a feature
-# being equal to a cut.
-X_dump = pd.read_csv("discrete/X.csv", header=None, sep=" ") + 1
-X_dump.to_csv("discrete/X.csv", **csv_args)
+    X_discrete = np.array(X, dtype=int) * 2
 
-df = pd.read_csv("manyfeatures.csv.gz", header=None, compression="gzip")
+    create_test_data(X_discrete, y, "discrete")
+    # Why do we add +1 here? It's to cover the test case where integer features
+    # lie exactly on the cut values. For this trainings test, the features will
+    # all be even numbers to the cut values will be odd numbers. Therefore, we
+    # can add +1 to the features to get odd numbers as well and cover the test
+    # case of a feature being equal to a cut.
+    X_dump = pd.read_csv("discrete/X.csv", header=None, sep=" ") + 1
+    X_dump.to_csv("discrete/X.csv", **csv_args)
 
-_, y = make_classification(n_samples=len(df), random_state=43, n_classes=2, weights=[0.5])
+    df = pd.read_csv("manyfeatures.csv.gz", header=None, compression="gzip")
 
-create_test_data(df.values, y, "manyfeatures")
+    _, y = make_classification(n_samples=len(df), random_state=43, n_classes=2, weights=[0.5])
 
-# for multiclassification
-X, y = make_classification(
-    n_samples=10000, n_features=5, n_informative=3, random_state=42, n_classes=3, weights=[0.33, 0.33]
-)
-create_test_data(X, y, "softmax", objective="multi:softproba", eval_metric="mlogloss")
+    create_test_data(df.values, y, "manyfeatures")
 
-# for GitHub issue #15
-X, y = make_classification(
-    n_samples=100, n_features=100, n_informative=3, random_state=42, n_classes=3, weights=[0.33, 0.33]
-)
-create_test_data(X, y, "softmax_n_samples_100_n_features_100", objective="multi:softproba", eval_metric="mlogloss")
+    # for multiclassification
+    X, y = make_classification(
+        n_samples=10000, n_features=5, n_informative=3, random_state=42, n_classes=3, weights=[0.33, 0.33]
+    )
+    create_test_data(X, y, "softmax", objective="multi:softproba", eval_metric="mlogloss")
+
+    # for GitHub issue #15
+    X, y = make_classification(
+        n_samples=100, n_features=100, n_informative=3, random_state=42, n_classes=3, weights=[0.33, 0.33]
+    )
+    create_test_data(X, y, "softmax_n_samples_100_n_features_100", objective="multi:softproba", eval_metric="mlogloss")
+
+
+if __name__ == "__main__":
+    main()

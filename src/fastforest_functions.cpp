@@ -51,24 +51,23 @@ namespace {
             return (*p == 0);
         }
 
-        template <class NumericType>
-        struct NumericAfterSubstrOutput {
-            explicit NumericAfterSubstrOutput() {
-                value = 0;
+        template <class Type_t>
+        struct AfterSubstrOutput {
+            explicit AfterSubstrOutput() {
+                value = Type_t();
                 found = false;
                 failed = true;
             }
-            NumericType value;
+            Type_t value;
             bool found;
             bool failed;
             std::string rest;
         };
 
-        template <class NumericType>
-        inline NumericAfterSubstrOutput<NumericType> numericAfterSubstr(std::string const& str,
-                                                                        std::string const& substr) {
+        template <class Type_t>
+        inline AfterSubstrOutput<Type_t> afterSubstr(std::string const& str, std::string const& substr) {
             std::string rest;
-            NumericAfterSubstrOutput<NumericType> output;
+            AfterSubstrOutput<Type_t> output;
             output.rest = str;
 
             std::size_t found = str.find(substr);
@@ -176,9 +175,13 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
     int nPreviousNodes = 0;
     int nPreviousLeaves = 0;
 
+    std::string xgboostVersion;
+
     while (std::getline(file, line)) {
         std::size_t foundBegin = line.find("[");
         std::size_t foundEnd = line.find("]");
+        util::AfterSubstrOutput<TreeResponseType> leafOutput = util::afterSubstr<TreeResponseType>(line, "leaf=");
+        util::AfterSubstrOutput<std::string> versionOutput = util::afterSubstr<std::string>(line, "xgboost_version=");
         if (foundBegin != std::string::npos) {
             std::string subline = line.substr(foundBegin + 1, foundEnd - foundBegin - 1);
             if (util::isInteger(subline) && !ff.responses_.empty()) {
@@ -206,13 +209,13 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
                 }
                 int yes;
                 int no;
-                util::NumericAfterSubstrOutput<int> output = util::numericAfterSubstr<int>(line, "yes=");
+                util::AfterSubstrOutput<int> output = util::afterSubstr<int>(line, "yes=");
                 if (!output.failed) {
                     yes = output.value;
                 } else {
                     throw std::runtime_error(info + "problem while parsing the text dump");
                 }
-                output = util::numericAfterSubstr<int>(output.rest, "no=");
+                output = util::afterSubstr<int>(output.rest, "no=");
                 if (!output.failed) {
                     no = output.value;
                 } else {
@@ -227,28 +230,49 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
                 nodeIndices[index] = nNodeIndices + nPreviousNodes;
             }
 
-        } else {
-            util::NumericAfterSubstrOutput<TreeResponseType> output =
-                util::numericAfterSubstr<TreeResponseType>(line, "leaf=");
-            if (output.found) {
-                std::stringstream ss(line);
-                int index;
-                ss >> index;
-                line = ss.str();
+        } else if (leafOutput.found) {
+            std::stringstream ss(line);
+            int index;
+            ss >> index;
+            line = ss.str();
 
-                ff.responses_.push_back(output.value);
-                std::size_t nLeafIndices = leafIndices.size();
-                leafIndices[index] = nLeafIndices + nPreviousLeaves;
-            }
+            ff.responses_.push_back(leafOutput.value);
+            std::size_t nLeafIndices = leafIndices.size();
+            leafIndices[index] = nLeafIndices + nPreviousLeaves;
+        } else if (versionOutput.found) {
+            xgboostVersion = versionOutput.value;
         }
     }
     terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices, treesSkipped);
+
+    if (xgboostVersion.empty()) {
+        std::stringstream ss;
+        ss << "ERROR: The XGBoost model dump is missing the required version hint line.\n"
+           << "       Without this hint, FastForest cannot guarantee correct parsing,\n"
+           << "       and inference results may be silently incorrect.\n\n"
+           << "To ensure the version hint is always consistent with the XGBoost version\n"
+           << "you actually used, we recommend appending the required version hint line\n"
+           << "right after dumping the model. For example:\n\n"
+           << "    outpath = model.txt\n"
+           << "    # Dump the model to a .txt file\n"
+           << "    model._Booster.dump_model(outpath, fmap=\"\", with_stats=False, dump_format=\"text\")\n"
+           << "    # Append the XGBoost version\n"
+           << "    with open(outpath, \"a\") as f:\n"
+           << "        f.write(f\"xgboost_version={xgboost.__version__}\\n\")";
+        throw std::runtime_error(ss.str());
+    }
 
     if (nClasses > 2 && (ff.rootIndices_.size() + treesSkipped) % nClasses != 0) {
         std::stringstream ss;
         ss << "Error in FastForest construction : Forest has " << ff.rootIndices_.size()
            << " trees, which is not compatible with " << nClasses << "classes!";
         throw std::runtime_error(ss.str());
+    }
+
+    if (!(xgboostVersion[0] == '0' || xgboostVersion[0] == '1' || xgboostVersion[0] == '2')) {
+        for (std::size_t i = 0; i < ff.baseResponses_.size(); ++i) {
+            ff.baseResponses_[i] += 0.5;
+        }
     }
 
     return ff;
