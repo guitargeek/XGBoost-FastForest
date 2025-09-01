@@ -175,13 +175,15 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
     int nPreviousNodes = 0;
     int nPreviousLeaves = 0;
 
-    std::string xgboostVersion;
+    bool baseScoreDefined = false;
+    TreeEnsembleResponseType baseScore = 0.0;
 
     while (std::getline(file, line)) {
         std::size_t foundBegin = line.find("[");
         std::size_t foundEnd = line.find("]");
         util::AfterSubstrOutput<TreeResponseType> leafOutput = util::afterSubstr<TreeResponseType>(line, "leaf=");
-        util::AfterSubstrOutput<std::string> versionOutput = util::afterSubstr<std::string>(line, "xgboost_version=");
+        util::AfterSubstrOutput<TreeEnsembleResponseType> baseScoreOutput =
+            util::afterSubstr<TreeEnsembleResponseType>(line, "base_score=");
         if (foundBegin != std::string::npos) {
             std::string subline = line.substr(foundBegin + 1, foundEnd - foundBegin - 1);
             if (util::isInteger(subline) && !ff.responses_.empty()) {
@@ -239,26 +241,32 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
             ff.responses_.push_back(leafOutput.value);
             std::size_t nLeafIndices = leafIndices.size();
             leafIndices[index] = nLeafIndices + nPreviousLeaves;
-        } else if (versionOutput.found) {
-            xgboostVersion = versionOutput.value;
+        } else if (baseScoreOutput.found) {
+            baseScore = baseScoreOutput.value;
+            baseScoreDefined = true;
         }
     }
     terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices, treesSkipped);
 
-    if (xgboostVersion.empty()) {
+    if (!baseScoreDefined) {
         std::stringstream ss;
-        ss << "ERROR: The XGBoost model dump is missing the required version hint line.\n"
+        ss << "\nERROR: The model dump is missing the required base_score=<float> line.\n"
            << "       Without this hint, FastForest cannot guarantee correct parsing,\n"
            << "       and inference results may be silently incorrect.\n\n"
-           << "To ensure the version hint is always consistent with the XGBoost version\n"
-           << "you actually used, we recommend appending the required version hint line\n"
+           << "To ensure the version hint is always consistent with the actual model\n"
+           << "you trained, we recommend appending the required line\n"
            << "right after dumping the model. For example:\n\n"
-           << "    outpath = model.txt\n"
+           << "    outfile = \"model.txt\"\n"
+           << "    booster = model.get_booster()\n"
            << "    # Dump the model to a .txt file\n"
-           << "    model._Booster.dump_model(outpath, fmap=\"\", with_stats=False, dump_format=\"text\")\n"
-           << "    # Append the XGBoost version\n"
-           << "    with open(outpath, \"a\") as f:\n"
-           << "        f.write(f\"xgboost_version={xgboost.__version__}\\n\")";
+           << "    booster.dump_model(outfile, fmap=\"\", with_stats=False, dump_format=\"text\")\n"
+           << "    # Append the base score (unfortunately missing in the .txt dump)\n"
+           << "    with open(outfile, \"a\") as f:\n"
+           << "        import json\n"
+           << "\n"
+           << "        json_dump = json.loads(booster.save_config())\n"
+           << "        base_score = json_dump[\"learner\"][\"learner_model_param\"][\"base_score\"]\n"
+           << "        f.write(f\"base_score={base_score}\\n\")\n\n";
         throw std::runtime_error(ss.str());
     }
 
@@ -269,10 +277,8 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
         throw std::runtime_error(ss.str());
     }
 
-    if (!(xgboostVersion[0] == '0' || xgboostVersion[0] == '1' || xgboostVersion[0] == '2')) {
-        for (std::size_t i = 0; i < ff.baseResponses_.size(); ++i) {
-            ff.baseResponses_[i] += 0.5;
-        }
+    for (std::size_t i = 0; i < ff.baseResponses_.size(); ++i) {
+        ff.baseResponses_[i] += baseScore;
     }
 
     return ff;
