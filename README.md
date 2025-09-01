@@ -34,7 +34,6 @@ In the end, we save the model both in __binary format__ to be able to still read
 format__ so we can open it with FastForest.
 
 ```Python
-import xgboost
 from xgboost import XGBClassifier
 from sklearn.datasets import make_classification
 import numpy as np
@@ -46,13 +45,19 @@ X, y = make_classification(
 model = XGBClassifier().fit(X, y)
 
 outfile = "model.txt"
+booster = model.get_booster()
 # Dump the model to a .txt file
-model._Booster.dump_model(outfile, fmap="", with_stats=False, dump_format="text")
-# Append the XGBoost version, required for correct parsing because of XGBoost
-#  version differences.
+booster.dump_model(outfile, fmap=, with_stats=False, dump_format="text")
+# Append the base score (unfortunately missing in the .txt dump)
 with open(outfile, "a") as f:
-    f.write(f"xgboost_version={xgboost.__version__}\n")
+    import json
+
+    json_dump = json.loads(booster.save_config())
+    base_score = json_dump["learner"]["learner_model_param"]["base_score"]
+    f.write(f"base_score={base_score}\n")
 ```
+
+In the future, FastForest might migrate to XGBoosts `.json` format for the model input, since this schema encodes the base score as well.
 
 In C++, you can now quickly load the model into a `FastForest` and obtain predictions by calling the FastForest object with an array of features.
 
@@ -80,30 +85,6 @@ Some things to keep in mind:
   the logistic transformation manually if you trained with `objective='binary:logistic'` and want to reproduce the results of `predict_proba()`, like in the code snippet above.
   * If you train with the `objective='binary:logitraw'`
     parameter, the output you'll get from `predict_proba()` will be without the logistic transformation, just like from the FastForest.
-
-### Models with non-zero base response
-
-If you still see a mismatch of xgboost and FastForest output even with the logistric transformation, your xgboost model probably has a base score that is not equal to 0.5. You can inspect the base score of an XGBClassifier as follows:
-
-```Python
-def get_basescore(model: xgb.XGBModel) -> float:
-    import json
-
-    """Get base score from an XGBoost sklearn estimator."""
-    base_score = float(json.loads(model.get_booster().save_config())["learner"]["learner_model_param"]["base_score"])
-    return base_score
-
-print(get_basescore(model)) # usually 0.5
-```
-If the base score is not 0.5, note it down, apply the inverse logistic transformation, and use it as the base response parameter for the FastForest evaluation:
-```C++
-float base_score = /* the output of get_basescore from Python */;
-float base_response = std::log(base_score / (1.0 - base_score));
-float score = 1./(1. + std::exp(-fastForest(input.data(), base_response)));
-```
-Unfortunately, the base score is not saved in the `.txt` dump of XGBoost, which is why this manual procedure is necessary.
-
-In the future, FastForest might migrate to XGBoosts `.json` format for the model input, since this schema encodes the base score.
 
 ### Multiclass classification with softmax
 

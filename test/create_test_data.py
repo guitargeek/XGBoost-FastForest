@@ -18,12 +18,17 @@ def create_test_data(X, y, directory, n_dump_samples=100, objective="binary:logi
 
     model = XGBClassifier(n_estimators=100, max_depth=7, objective=objective, eval_metric=eval_metric).fit(X, y)
 
-    outpath = os.path.join(directory, "model.txt")
+    outfile = os.path.join(directory, "model.txt")
+    booster = model.get_booster()
     # Dump the model to a .txt file
-    model._Booster.dump_model(outpath, fmap="", with_stats=False, dump_format="text")
-    # Append the XGBoost version
-    with open(outpath, "a") as f:
-        f.write(f"xgboost_version={xgboost.__version__}\n")
+    booster.dump_model(outfile, fmap="", with_stats=False, dump_format="text")
+    # Append the base score (unfortunately missing in the .txt dump)
+    with open(outfile, "a") as f:
+        import json
+
+        json_dump = json.loads(booster.save_config())
+        base_score = float(json_dump["learner"]["learner_model_param"]["base_score"])
+        f.write(f"base_score={base_score}\n")
 
     feature_names = [(f"f{i}", "F") for i in range(len(y))]
     xgboost2tmva.convert_model(model._Booster.get_dump(), feature_names, os.path.join(directory, "model.xml"))
