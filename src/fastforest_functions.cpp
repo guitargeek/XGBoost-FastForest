@@ -27,19 +27,72 @@ SOFTWARE.
 #include <fastforest.h>
 #include "common_details.h"
 
-#include <iostream>
+#include <cmath>
+#include <cstring>
 #include <fstream>
-#include <sstream>
-#include <map>
-#include <stdexcept>
 #include <iostream>
+#include <limits>
+#include <map>
+#include <sstream>
+#include <stdexcept>
 #include <stdlib.h> /* strtol */
+#include <string>
 
 using namespace fastforest;
 
 namespace {
 
     namespace util {
+
+        // ------------------- float version -------------------
+        float nextafter(float x, float y) {
+            if (x != x || y != y)
+                return std::numeric_limits<float>::quiet_NaN();
+            if (x == y)
+                return y;
+            if (x == 0.0f) {
+                float smallest = std::numeric_limits<float>::denorm_min();
+                return (y > 0) ? smallest : -smallest;
+            }
+
+            int32_t bits;
+            std::memcpy(&bits, &x, sizeof(float));
+
+            if ((x > 0) == (y > x)) {
+                ++bits;
+            } else {
+                --bits;
+            }
+
+            float result;
+            std::memcpy(&result, &bits, sizeof(float));
+            return result;
+        }
+
+        // ------------------- double version -------------------
+        double nextafter(double x, double y) {
+            if (x != x || y != y)
+                return std::numeric_limits<double>::quiet_NaN();
+            if (x == y)
+                return y;
+            if (x == 0.0) {
+                double smallest = std::numeric_limits<double>::denorm_min();
+                return (y > 0) ? smallest : -smallest;
+            }
+
+            int64_t bits;
+            std::memcpy(&bits, &x, sizeof(double));
+
+            if ((x > 0) == (y > x)) {
+                ++bits;
+            } else {
+                --bits;
+            }
+
+            double result;
+            std::memcpy(&result, &bits, sizeof(double));
+            return result;
+        }
 
         inline bool isInteger(const std::string& s) {
             if (s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+')))
@@ -198,8 +251,16 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
                 std::string const& varName = splitstring[0];
                 FeatureType cutValue;
                 {
+                    bool lessEqual = false;
+                    if (splitstring[1][0] == '=') {
+                        splitstring[1] = splitstring[1].substr(1);
+                        lessEqual = true;
+                    }
                     std::stringstream ss(splitstring[1]);
                     ss >> cutValue;
+                    if (lessEqual) {
+                        cutValue = util::nextafter(cutValue, std::numeric_limits<FeatureType>::infinity());
+                    }
                 }
                 if (!varIndices.count(varName)) {
                     if (fixFeatures) {

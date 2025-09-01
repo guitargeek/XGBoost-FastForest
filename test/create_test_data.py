@@ -38,6 +38,16 @@ def create_test_data(
         base_score = float(json_dump["learner"]["learner_model_param"]["base_score"])
         f.write(f"base_score={base_score}\n")
 
+    if int(xgb.__version__[0]) < 2:
+        # Replace all '<' with '<=' in the text dump file (before version 2.0,
+        # XGBoost used inconsistent comparison operators in the model).
+
+        with open(outfile, "r") as f:
+            text = f.read()
+
+        with open(outfile, "w") as f:
+            f.write(text.replace("<", "<="))
+
     if convert_to_tmva:
         import xgboost2tmva
 

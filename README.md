@@ -60,6 +60,24 @@ with open(outfile, "a") as f:
 If you got the model in `.json` format, you can load it with [XGBoostClassifier.load_model()](https://federated-xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBClassifier.load_model)
 or [XGBoostRegressor.load_model()](https://federated-xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBRegressor.load_model) and write out the `.txt` dump that FastForest expects.
 
+Backwards compatibility with older XGBoost versions is important for FastForest.
+Before version **XGBoost 2.0**, the text dump was not consistent with the
+actual model because the comparisons were not defined correctly.
+To really get exactly the same results with FastForest as with **XGBoost 1.X.Y**,
+you need to patch the comparison operators in the text dump:
+
+```Python
+if int(xgb.__version__[0]) < 2:
+    # Replace all '<' with '<=' in the text dump file (before version 2.0,
+    # XGBoost used inconsistent comparison operators in the model).
+
+    with open(outfile, "r") as f:
+        text = f.read()
+
+    with open(outfile, "w") as f:
+        f.write(text.replace("<", "<="))
+```
+
 In C++, you can now quickly load the model into a `FastForest` and obtain predictions by calling the FastForest object with an array of features.
 
 ```C++
