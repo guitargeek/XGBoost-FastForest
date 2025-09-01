@@ -39,12 +39,11 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DEXPERIMENTAL_TMVA_SUPPORT:bool=OFF -DCMAKE_INSTALL_PREFIX=../install ..
+          cmake -DCMAKE_INSTALL_PREFIX=../install ..
           cmake --build . --target install -j2
 
       - name: Prepare test data
         run: |
-          ln -s $PWD/benchmark/xgboost2tmva.py $PWD/test/xgboost2tmva.py
           cd test
           python create_test_data.py
 

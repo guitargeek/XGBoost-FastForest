@@ -1,5 +1,4 @@
-import xgboost
-from xgboost import XGBClassifier
+import xgboost as xgb
 from sklearn.datasets import make_classification
 
 import numpy as np
@@ -7,16 +6,25 @@ import pandas as pd
 
 import os
 
-import xgboost2tmva
-
 csv_args = dict(header=False, index=False, sep=" ")
 
 
-def create_test_data(X, y, directory, n_dump_samples=100, objective="binary:logitraw", eval_metric="logloss"):
+def create_test_data(
+    X, y, directory, n_dump_samples=100, objective="binary:logitraw", eval_metric="logloss", convert_to_tmva=False
+):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    model = XGBClassifier(n_estimators=100, max_depth=7, objective=objective, eval_metric=eval_metric).fit(X, y)
+    model = xgb.XGBClassifier(n_estimators=100, max_depth=7, objective=objective, eval_metric=eval_metric).fit(X, y)
+
+    outfile_json = os.path.join(directory, "model.json")
+
+    # Make sure JSON roundtripping works (broken in XGBoost 2.0.3)
+    if xgb.__version__ != "2.0.3":
+        model.save_model(outfile_json)
+
+        model = xgb.XGBClassifier()
+        model.load_model(outfile_json)
 
     outfile = os.path.join(directory, "model.txt")
     booster = model.get_booster()
@@ -30,8 +38,11 @@ def create_test_data(X, y, directory, n_dump_samples=100, objective="binary:logi
         base_score = float(json_dump["learner"]["learner_model_param"]["base_score"])
         f.write(f"base_score={base_score}\n")
 
-    feature_names = [(f"f{i}", "F") for i in range(len(y))]
-    xgboost2tmva.convert_model(model._Booster.get_dump(), feature_names, os.path.join(directory, "model.xml"))
+    if convert_to_tmva:
+        import xgboost2tmva
+
+        feature_names = [(f"f{i}", "F") for i in range(len(y))]
+        xgboost2tmva.convert_model(model._Booster.get_dump(), feature_names, os.path.join(directory, "model.xml"))
 
     X_dump = X[:n_dump_samples]
 

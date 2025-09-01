@@ -57,7 +57,8 @@ with open(outfile, "a") as f:
     f.write(f"base_score={base_score}\n")
 ```
 
-In the future, FastForest might migrate to XGBoosts `.json` format for the model input, since this schema encodes the base score as well.
+If you got the model in `.json` format, you can load it with [XGBoostClassifier.load_model()](https://federated-xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBClassifier.load_model)
+or [XGBoostRegressor.load_model()](https://federated-xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBRegressor.load_model) and write out the `.txt` dump that FastForest expects.
 
 In C++, you can now quickly load the model into a `FastForest` and obtain predictions by calling the FastForest object with an array of features.
 
