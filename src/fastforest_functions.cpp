@@ -27,6 +27,7 @@ SOFTWARE.
 #include <fastforest.h>
 #include "common_details.h"
 
+#include <cassert>
 #include <cmath>
 #include <cstring>
 #include <fstream>
@@ -259,7 +260,11 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
                     std::stringstream ss(splitstring[1]);
                     ss >> cutValue;
                     if (lessEqual) {
-                        cutValue = util::nextafter(cutValue, std::numeric_limits<FeatureType>::infinity());
+                        FeatureType val = cutValue;
+                        cutValue = util::nextafter(val, std::numeric_limits<FeatureType>::infinity());
+#if __cplusplus >= 201103L
+                        assert(cutValue == std::nextafter(val, std::numeric_limits<FeatureType>::infinity()));
+#endif
                     }
                 }
                 if (!varIndices.count(varName)) {

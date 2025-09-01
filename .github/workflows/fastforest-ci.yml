@@ -15,12 +15,14 @@ jobs:
       fail-fast: false
       matrix:
         deps:
-          - { xgboost: "1.5.2", numpy: "<2.0" }
-          - { xgboost: "1.6.2", numpy: "<3.0" }
-          - { xgboost: "1.7.6", numpy: "<3.0" }
-          - { xgboost: "2.0.3", numpy: "<3.0" }
-          - { xgboost: "2.1.4", numpy: "<3.0" }
-          - { xgboost: "3.0.4", numpy: "<3.0" }
+          - { xgboost: "1.5.2", numpy: "<2.0", cxx: 98 }
+          - { xgboost: "1.6.2", numpy: "<3.0", cxx: 98 }
+          - { xgboost: "1.7.6", numpy: "<3.0", cxx: 98 }
+          - { xgboost: "2.0.0", numpy: "<3.0", cxx: 98 }
+          - { xgboost: "2.0.3", numpy: "<3.0", cxx: 98 }
+          - { xgboost: "2.1.4", numpy: "<3.0", cxx: 98 }
+          - { xgboost: "3.0.0", numpy: "<3.0", cxx: 17 }
+          - { xgboost: "3.0.4", numpy: "<3.0", cxx: 98 }
 
     steps:
       - uses: actions/checkout@v3
@@ -39,7 +41,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DCMAKE_INSTALL_PREFIX=../install ..
+          cmake -DCMAKE_INSTALL_PREFIX=../install -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=${{ matrix.deps.cxx }} ..
           cmake --build . --target install -j2
 
       - name: Prepare test data
