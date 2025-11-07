@@ -53,7 +53,8 @@ with open(outfile, "a") as f:
     import json
 
     json_dump = json.loads(booster.save_config())
-    base_score = json_dump["learner"]["learner_model_param"]["base_score"]
+    base_score_str = json_dump["learner"]["learner_model_param"]["base_score"]
+    base_score = json.loads(base_score_str)[0]  # NB: Should not contain any brackets [ or ], as C++ parsing might crash.
     f.write(f"base_score={base_score}\n")
 ```
 
