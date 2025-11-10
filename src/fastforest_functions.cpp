@@ -120,7 +120,6 @@ namespace {
 
         template <class Type_t>
         inline AfterSubstrOutput<Type_t> afterSubstr(std::string const& str, std::string const& substr) {
-            std::string rest;
             AfterSubstrOutput<Type_t> output;
             output.rest = str;
 
@@ -135,6 +134,14 @@ namespace {
                 }
             }
             return output;
+        }
+
+        std::string strAfterSubstr(std::string const& str, std::string const& substr) {
+            std::size_t found = str.find(substr);
+            if (found != std::string::npos) {
+                return str.substr(found + substr.size(), str.size() - found + substr.size());
+            }
+            return "";
         }
 
         std::vector<std::string> split(std::string const& strToSplit, char delimiter) {
@@ -153,6 +160,28 @@ namespace {
                 return true;
             } else {
                 return false;
+            }
+        }
+
+        template <class Type_t>
+        void parseList(std::vector<Type_t>& result, const std::string& input) {
+            std::string s = input;
+
+            // Remove square brackets if present
+            if (!s.empty() && s[0] == '[')
+                s.erase(0, 1);
+            if (!s.empty() && s[s.size() - 1] == ']')
+                s.erase(s.size() - 1);
+
+            std::stringstream ss(s);
+            std::string number;
+
+            while (std::getline(ss, number, ',')) {
+                std::stringstream numStream(number);
+                Type_t value;
+                if (numStream >> value) {
+                    result.push_back(value);
+                }
             }
         }
 
@@ -229,16 +258,16 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
     int nPreviousNodes = 0;
     int nPreviousLeaves = 0;
 
-    bool baseScoreDefined = false;
-    TreeEnsembleResponseType baseScore = 0.0;
+    std::vector<TreeEnsembleResponseType> baseScore;
 
     while (std::getline(file, line)) {
         std::size_t foundBegin = line.find("[");
         std::size_t foundEnd = line.find("]");
         util::AfterSubstrOutput<TreeResponseType> leafOutput = util::afterSubstr<TreeResponseType>(line, "leaf=");
-        util::AfterSubstrOutput<TreeEnsembleResponseType> baseScoreOutput =
-            util::afterSubstr<TreeEnsembleResponseType>(line, "base_score=");
-        if (foundBegin != std::string::npos) {
+        std::string baseScoreOutput = util::strAfterSubstr(line, "base_score=");
+        if (!baseScoreOutput.empty()) {
+            util::parseList(baseScore, baseScoreOutput);
+        } else if (foundBegin != std::string::npos) {
             std::string subline = line.substr(foundBegin + 1, foundEnd - foundBegin - 1);
             if (util::isInteger(subline) && !ff.responses_.empty()) {
                 terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices, treesSkipped);
@@ -307,14 +336,11 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
             ff.responses_.push_back(leafOutput.value);
             std::size_t nLeafIndices = leafIndices.size();
             leafIndices[index] = nLeafIndices + nPreviousLeaves;
-        } else if (baseScoreOutput.found) {
-            baseScore = baseScoreOutput.value;
-            baseScoreDefined = true;
         }
     }
     terminateTree(ff, nPreviousNodes, nPreviousLeaves, nodeIndices, leafIndices, treesSkipped);
 
-    if (!baseScoreDefined) {
+    if (baseScore.empty()) {
         std::stringstream ss;
         ss << "\nERROR: The model dump is missing the required base_score=<float> line.\n"
            << "       Without this hint, FastForest cannot guarantee correct parsing,\n"
@@ -331,7 +357,12 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
            << "        import json\n"
            << "\n"
            << "        json_dump = json.loads(booster.save_config())\n"
-           << "        base_score = json_dump[\"learner\"][\"learner_model_param\"][\"base_score\"]\n"
+           << "        base_score_str = json_dump[\"learner\"][\"learner_model_param\"][\"base_score\"]\n"
+           << "        base_score = json.loads(base_score_str)\n"
+           << "        if isinstance(base_score, float):\n"
+           << "            # Before XGBoost 3.1.0, this was a single float.\n"
+           << "            # So we have to pack it into a list ourselves.\n"
+           << "            base_score = [base_score]\n"
            << "        f.write(f\"base_score={base_score}\\n\")\n\n";
         throw std::runtime_error(ss.str());
     }
@@ -344,7 +375,7 @@ FastForest fastforest::load_txt(std::istream& file, std::vector<std::string>& fe
     }
 
     for (std::size_t i = 0; i < ff.baseResponses_.size(); ++i) {
-        ff.baseResponses_[i] += baseScore;
+        ff.baseResponses_[i] += baseScore.size() == 1 ? baseScore[0] : baseScore[i];
     }
 
     return ff;

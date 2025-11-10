@@ -9,7 +9,7 @@ on:
 jobs:
   ci:
     name: Run CI (xgboost ${{ matrix.deps.xgboost }})
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
@@ -23,6 +23,7 @@ jobs:
           - { xgboost: "2.1.4", numpy: "<3.0", cxx: 98 }
           - { xgboost: "3.0.0", numpy: "<3.0", cxx: 17 }
           - { xgboost: "3.0.4", numpy: "<3.0", cxx: 98 }
+          - { xgboost: "3.1.1", numpy: "<3.0", cxx: 98 }
 
     steps:
       - uses: actions/checkout@v3

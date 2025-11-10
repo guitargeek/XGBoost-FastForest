@@ -9,6 +9,27 @@ import os
 csv_args = dict(header=False, index=False, sep=" ")
 
 
+def get_basescore(model):
+    """Get base score from an XGBoost sklearn estimator.
+
+    Copy-pasted from XGBoost unit test code.
+
+    See also:
+      * https://github.com/dmlc/xgboost/blob/2463938/python-package/xgboost/testing/updater.py#L43
+      * https://github.com/dmlc/xgboost/issues/9347
+      * https://discuss.xgboost.ai/t/how-to-get-base-score-from-trained-booster/3192
+    """
+    import json
+
+    jintercept = json.loads(model.get_booster().save_config())["learner"]["learner_model_param"]["base_score"]
+    out = json.loads(jintercept)
+    if isinstance(out, float):
+        # Before XGBoost 3.1.0, this was a single float. So we pack it into a
+        # list ourselves.
+        return [out]
+    return out
+
+
 def create_test_data(
     X, y, directory, n_dump_samples=100, objective="binary:logitraw", eval_metric="logloss", convert_to_tmva=False
 ):
@@ -32,10 +53,7 @@ def create_test_data(
     booster.dump_model(outfile, fmap="", with_stats=False, dump_format="text")
     # Append the base score (unfortunately missing in the .txt dump)
     with open(outfile, "a") as f:
-        import json
-
-        json_dump = json.loads(booster.save_config())
-        base_score = float(json_dump["learner"]["learner_model_param"]["base_score"])
+        base_score = get_basescore(model)
         f.write(f"base_score={base_score}\n")
 
     if int(xgb.__version__[0]) < 2:

@@ -47,13 +47,18 @@ model = XGBClassifier().fit(X, y)
 outfile = "model.txt"
 booster = model.get_booster()
 # Dump the model to a .txt file
-booster.dump_model(outfile, fmap=, with_stats=False, dump_format="text")
+booster.dump_model(outfile, fmap="", with_stats=False, dump_format="text")
 # Append the base score (unfortunately missing in the .txt dump)
 with open(outfile, "a") as f:
     import json
 
     json_dump = json.loads(booster.save_config())
-    base_score = json_dump["learner"]["learner_model_param"]["base_score"]
+    base_score_str = json_dump["learner"]["learner_model_param"]["base_score"]
+    base_score = json.loads(base_score_str)
+    if isinstance(base_score, float):
+        # Before XGBoost 3.1.0, this was a single float.
+        # So we have to pack it into a list ourselves.
+        base_score = [base_score]
     f.write(f"base_score={base_score}\n")
 ```
 
