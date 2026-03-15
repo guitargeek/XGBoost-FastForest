@@ -23,7 +23,8 @@ jobs:
           - { xgboost: "2.1.4", numpy: "<3.0", cxx: 98 }
           - { xgboost: "3.0.0", numpy: "<3.0", cxx: 17 }
           - { xgboost: "3.0.4", numpy: "<3.0", cxx: 98 }
-          - { xgboost: "3.1.1", numpy: "<3.0", cxx: 98 }
+          - { xgboost: "3.1.3", numpy: "<3.0", cxx: 98 }
+          - { xgboost: "3.2.0", numpy: "<3.0", cxx: 98 }
 
     steps:
       - uses: actions/checkout@v3
